@@ -103,6 +103,19 @@
     setTimeout(poll, 1000);
   }
 
+  // File pickers: show the chosen file's name next to the button (the native input is hidden behind it).
+  const showFile = (input) => {
+    const name = input.closest('.file-row')?.querySelector('[data-file-name]');
+    if (!name) return;
+    const f = input.files?.[0];
+    name.textContent = f ? `${f.name} · ${Math.max(1, Math.round(f.size / 1024))} KB` : 'No file selected';
+    name.classList.toggle('chosen', !!f);
+  };
+  document.querySelectorAll('input[data-file]').forEach((input) => {
+    showFile(input);
+    input.addEventListener('change', () => showFile(input));
+  });
+
   // Drag & drop a file onto the textarea.
   const area = document.querySelector('[data-dropzone] textarea');
   if (area) {
