@@ -97,8 +97,14 @@ textarea.dragover { border-color: var(--acc); }
 .step { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .step:last-of-type { border-bottom: 0; }
 .num { width: 20px; height: 20px; border-radius: 50%; background: rgba(59,130,246,.15); color: var(--acc); font-weight: 700; font-size: 11px; display: grid; place-items: center; flex: none; }
-.total { display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--line); }
-.expert { margin-top: 14px; border: 1px solid #2c3550; background: linear-gradient(160deg, #141b2e, #0f1320); color: #e6e8ee; border-radius: 12px; padding: 16px; }
+.total { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; margin-top: 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.side .plan { margin-top: 14px; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+.plan .pager { padding: 10px 0 0; }
+.pager .b { padding: 4px 10px; font-size: 12px; }
+.pager .b:disabled { opacity: .4; cursor: default; }
+.pager[hidden], .step[hidden] { display: none; }
+.expert { border: 1px solid #2c3550; background: linear-gradient(160deg, #141b2e, #0f1320); color: #e6e8ee; border-radius: 12px; padding: 16px; }
 .expert p { color: #c7cfe2; font-size: 13px; }
 .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; } .chips span { font-size: 10px; padding: 2px 7px; border-radius: 999px; border: 1px solid #2c3550; color: #b6c2e0; }
 .pdf { margin-top: 14px; border: 1px dashed var(--line); border-radius: 12px; padding: 14px; }

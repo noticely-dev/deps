@@ -75,22 +75,13 @@
       <% if (r.rows.length === 0) { %><tr><td colspan="7" class="muted">No dependencies to check.</td></tr><% } %>
       </tbody>
     </table>
+    <nav class="pager" data-pager="rows" hidden><button type="button" class="b" data-page="prev">← Prev</button><span class="muted small" data-page-info></span><button type="button" class="b" data-page="next">Next →</button></nav>
     <% if (r.skipped.length) { %>
       <div class="deps-tools muted small">Not checked: <% r.skipped.forEach(function (s, i) { %><%= i ? ', ' : '' %><span class="mono"><%= s.name %></span> (<%= s.reason %>)<% }) %></div>
     <% } %>
   </section>
 
   <aside class="side">
-    <div class="panel">
-      <h3>Recommended upgrade order</h3>
-      <div class="muted small">Highest risk removed per hour first · rough estimates</div>
-      <% if (r.plan.length === 0) { %><p class="muted">Nothing to do right now.</p><% } %>
-      <% r.plan.forEach(function (s) { %>
-        <div class="step"><div class="num"><%= s.n %></div><div><b><%= s.name %>:</b> <%= s.action %><div class="muted small"><%= s.effort %></div></div></div>
-      <% }) %>
-      <% if (r.planTotal) { %><div class="total"><span class="muted">Total estimate</span><b><%= r.planTotal %></b></div><% } %>
-    </div>
-
     <div class="expert">
       <b>Need these upgrades done?</b>
       <div class="chips"><span>Node.js</span><span>MongoDB</span><span>Docker</span><span>Upgrades &amp; migrations</span></div>
@@ -102,6 +93,17 @@
       <b>Full PDF report</b> <span class="sev none">coming soon</span>
       <p class="muted small">Findings, evidence and this upgrade plan as a document you can hand to your team or client.</p>
       <%~ include('./partials/notify-form', { list: 'pdf', reportId: r.id }) %>
+    </div>
+
+    <div class="panel plan">
+      <h3>Recommended upgrade order</h3>
+      <div class="muted small">Highest risk removed per hour first · rough estimates</div>
+      <% if (r.planTotal) { %><div class="total"><span class="muted"><%= r.plan.length %> steps · total estimate</span><b><%= r.planTotal %></b></div><% } %>
+      <% if (r.plan.length === 0) { %><p class="muted">Nothing to do right now.</p><% } %>
+      <% r.plan.forEach(function (s) { %>
+        <div class="step" data-step><div class="num"><%= s.n %></div><div><b><%= s.name %>:</b> <%= s.action %><div class="muted small"><%= s.effort %></div></div></div>
+      <% }) %>
+      <nav class="pager" data-pager="plan" hidden><button type="button" class="b" data-page="prev">← Prev</button><span class="muted small" data-page-info></span><button type="button" class="b" data-page="next">Next →</button></nav>
     </div>
   </aside>
 </div>

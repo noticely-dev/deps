@@ -52,6 +52,20 @@ describe('GET /r/:id', () => {
     expect(res.body).not.toMatch(OWNER_NAME_RE);
   });
 
+  it('puts the quote card and PDF box above the plan, with pagers for long lists', async () => {
+    const id = await doneReport(deps);
+    const body = (await t.app.inject({ url: `/r/${id}` })).body;
+    const quote = body.indexOf('Get a fixed-price quote');
+    const pdf = body.indexOf('Full PDF report');
+    const plan = body.indexOf('Recommended upgrade order');
+    expect(quote).toBeGreaterThan(-1);
+    expect(quote).toBeLessThan(pdf);
+    expect(pdf).toBeLessThan(plan);
+    expect(body).toContain('data-pager="rows" hidden');
+    expect(body).toContain('data-pager="plan" hidden');
+    expect(body).toContain('class="step" data-step');
+  });
+
   it('shows the worst-case note only for ranges, worded for a lockfile that lacks the dependency', async () => {
     const exact = await doneReport([{ name: 'lodash', spec: '4.17.15', scope: 'prod', lockVersion: null }]);
     expect((await t.app.inject({ url: `/r/${exact}` })).body).not.toContain('may already be fixed');
