@@ -4,5 +4,5 @@
   <p>Existing reports stay available. You can view and share them any time.</p>
   <p><b>Need more checks?</b> A check pack (100 checks, €9) is coming. Leave your email and you'll get a single email when it's available.</p>
   <%~ include('./partials/notify-form', { list: 'pack', reportId: '' }) %>
-  <p class="row-actions"><a class="b" href="/">← Back</a></p>
+  <p class="row-actions"><a class="b" href="/">Back</a></p>
 </section>

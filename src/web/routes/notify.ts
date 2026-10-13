@@ -5,6 +5,7 @@ import { confirmSignup, findByToken, requestSignup, unsubscribe, type List } fro
 import type { AppDeps } from '../app.js';
 import { clientIp } from '../client-ip.js';
 import { consume } from '../limits.js';
+import { confirmEmail } from '../../mail/templates.js';
 
 const Body = z.strictObject({
   email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
@@ -13,7 +14,10 @@ const Body = z.strictObject({
   'cf-turnstile-response': z.string().max(2048).optional(),
 });
 
-const LIST_NAME: Record<List, string> = { pdf: 'the full PDF report', pack: 'check packs' };
+// Phrases that read correctly for both lists (one is singular, one plural).
+const AVAILABLE: Record<List, string> = { pdf: 'the full PDF report is available', pack: 'check packs are available' };
+const LIST_TITLE: Record<List, string> = { pdf: 'the noticely PDF report', pack: 'noticely check packs' };
+const ABOUT: Record<List, string> = { pdf: 'the full PDF report', pack: 'check packs' };
 const INVALID = { title: 'Link expired', heading: 'This link is no longer valid', message: 'It may have expired or already been used. You can sign up again from any report page.', back: true };
 
 export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps): Promise<void> {
@@ -35,22 +39,11 @@ export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps):
     const token = newToken();
     if ((await requestSignup(deps.db, email, list, hashToken(token), now())) === 'pending') {
       const base = deps.config.PUBLIC_URL;
-      await deps.mailer.send({
-        to: email,
-        subject: `Confirm: notify me about ${LIST_NAME[list]}`,
-        text: [
-          `Someone (hopefully you) asked to be notified when ${LIST_NAME[list]} become available on noticely/deps.`,
-          '',
-          `To confirm, open this link and press the button: ${base}/confirm/${token}`,
-          '',
-          "If this wasn't you, ignore this email and nothing happens; the request expires in 7 days.",
-          `Unsubscribe at any time: ${base}/unsubscribe/${token}`,
-        ].join('\n'),
-      }).catch((err) => req.log.error({ err }, 'confirmation email failed'));
+      await deps.mailer.send({ to: email, ...confirmEmail({ base, token, listTitle: LIST_TITLE[list], what: AVAILABLE[list] }) }).catch((err) => req.log.error({ err }, 'confirmation email failed'));
     }
     // Same answer whether or not the address was already confirmed, so the form can't be used to probe the lists.
     const back = parsed.data.r && REPORT_ID_RE.test(parsed.data.r) ? { href: `/r/${parsed.data.r}`, label: 'Back to the report' } : undefined;
-    return reply.page('./notice', { title: 'Check your inbox', heading: 'Check your inbox', message: `If ${email} isn't on the list yet, a confirmation link is on its way. Click it to finish signing up.`, link: back });
+    return reply.page('./notice', { title: 'Check your inbox', heading: 'Check your inbox', message: `Unless ${email} is already on the list, a confirmation email is on its way. Open it and click Confirm email to finish signing up. Can't find it? Check your spam folder; the link is valid for 7 days.`, link: back });
   });
 
   // Confirm and unsubscribe links open a page with a one-button form; only the POST changes anything,
@@ -62,7 +55,7 @@ export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps):
     if (!sub || !valid) return reply.page('./notice', INVALID);
     return reply.page('./notice', {
       title: 'Confirm sign-up', heading: 'Confirm your sign-up',
-      message: `Confirm that you want one email when ${LIST_NAME[sub.list]} are available.`,
+      message: `Confirm that you want one email when ${AVAILABLE[sub.list]}.`,
       action: { href: `/confirm/${req.params.token}`, label: 'Confirm' },
     });
   });
@@ -75,7 +68,7 @@ export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps):
     return reply.page('./notice', {
       title: 'Confirmed',
       heading: result === 'confirmed' ? "You're on the list" : 'You have already confirmed',
-      message: result === 'confirmed' ? `You'll get one email when ${LIST_NAME[list as List]} are available.` : 'Nothing more to do. You are already confirmed.',
+      message: result === 'confirmed' ? `You'll get one email when ${AVAILABLE[list as List]}.` : 'Nothing more to do. You are already confirmed.',
       back: true,
     });
   });
@@ -86,7 +79,7 @@ export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps):
     if (!sub) return reply.page('./notice', INVALID);
     return reply.page('./notice', {
       title: 'Unsubscribe', heading: 'Stop these emails?',
-      message: `You will not get the email about ${LIST_NAME[sub.list]}.`,
+      message: `You will not get the email about ${ABOUT[sub.list]}.`,
       action: { href: `/unsubscribe/${req.params.token}`, label: 'Unsubscribe' },
     });
   });

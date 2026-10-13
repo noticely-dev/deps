@@ -4,6 +4,7 @@ export interface MailMessage {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
 }
 
@@ -26,7 +27,7 @@ export function createResendMailer(o: { apiKey: string; from: string; fetch: Fet
       const res = await o.fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { authorization: `Bearer ${o.apiKey}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ from: o.from, to: [m.to], subject: m.subject, text: m.text, ...(m.replyTo ? { reply_to: m.replyTo } : {}) }),
+        body: JSON.stringify({ from: o.from, to: [m.to], subject: m.subject, text: m.text, ...(m.html ? { html: m.html } : {}), ...(m.replyTo ? { reply_to: m.replyTo } : {}) }),
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) throw new Error(`Resend responded ${res.status}`);
