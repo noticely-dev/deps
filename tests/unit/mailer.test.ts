@@ -11,6 +11,12 @@ describe('Resend mailer', () => {
     expect(JSON.parse(f.calls[0]?.body ?? '{}')).toEqual({ from: 'noticely <hello@noticely.dev>', to: ['a@b.test'], subject: 'Hi', text: 'Body', reply_to: 'c@d.test' });
   });
 
+  it('sends the HTML version when there is one', async () => {
+    const f = fakeFetch(() => ({ body: { id: 'x' } }));
+    await createResendMailer({ apiKey: 'k', from: 'x <x@y.z>', fetch: f.fetch }).send({ to: 'a@b.test', subject: 's', text: 't', html: '<p>t</p>' });
+    expect(JSON.parse(f.calls[0]?.body ?? '{}')).toMatchObject({ text: 't', html: '<p>t</p>' });
+  });
+
   it('throws when Resend rejects the email', async () => {
     const f = fakeFetch(() => ({ status: 422, body: { message: 'bad' } }));
     await expect(createResendMailer({ apiKey: 'k', from: 'x <x@y.z>', fetch: f.fetch }).send({ to: 'a@b.test', subject: 's', text: 't' }))

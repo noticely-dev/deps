@@ -75,7 +75,7 @@
       <% if (r.rows.length === 0) { %><tr><td colspan="7" class="muted">No dependencies to check.</td></tr><% } %>
       </tbody>
     </table>
-    <nav class="pager" data-pager="rows" hidden><button type="button" class="b" data-page="prev">← Prev</button><span class="muted small" data-page-info></span><button type="button" class="b" data-page="next">Next →</button></nav>
+    <nav class="pager" data-pager="rows" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
     <% if (r.skipped.length) { %>
       <div class="deps-tools muted small">Not checked: <% r.skipped.forEach(function (s, i) { %><%= i ? ', ' : '' %><span class="mono"><%= s.name %></span> (<%= s.reason %>)<% }) %></div>
     <% } %>
@@ -86,7 +86,7 @@
       <b>Need these upgrades done?</b>
       <div class="chips"><span>Node.js</span><span>MongoDB</span><span>Docker</span><span>Upgrades &amp; migrations</span></div>
       <p>noticely is built by an independent backend engineer. Fixed price, tested, with a written handover.</p>
-      <a class="b p" href="<%= r.contactUrl %>">Get a fixed-price quote →</a>
+      <a class="b p" href="<%= r.contactUrl %>">Get a fixed-price quote</a>
     </div>
 
     <div class="pdf">
@@ -103,7 +103,7 @@
       <% r.plan.forEach(function (s) { %>
         <div class="step" data-step><div class="num"><%= s.n %></div><div><b><%= s.name %>:</b> <%= s.action %><div class="muted small"><%= s.effort %></div></div></div>
       <% }) %>
-      <nav class="pager" data-pager="plan" hidden><button type="button" class="b" data-page="prev">← Prev</button><span class="muted small" data-page-info></span><button type="button" class="b" data-page="next">Next →</button></nav>
+      <nav class="pager" data-pager="plan" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
     </div>
   </aside>
 </div>

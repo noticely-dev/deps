@@ -6,6 +6,7 @@ import type { AppDeps } from '../app.js';
 import { clientIp } from '../client-ip.js';
 import { checkFormTime, issueFormTime } from '../form-time.js';
 import { consume } from '../limits.js';
+import { quoteRequestEmail } from '../../mail/templates.js';
 
 const oneLine = (s: string) => s.replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
@@ -53,13 +54,8 @@ export default async function contactRoutes(app: FastifyInstance, deps: AppDeps)
       await deps.mailer.send({
         to: deps.config.CONTACT_TO,
         replyTo: b.email,
-        subject: `Quote request: ${name}${company ? ` (${company})` : ''}`,
-        text: [
-          `From: ${name} <${b.email}>${company ? `, ${company}` : ''}`,
-          reportId ? `Report: ${deps.config.PUBLIC_URL}/r/${reportId}` : 'Report: none',
-          '',
-          b.message,
-        ].join('\n'),
+        ...quoteRequestEmail({ base: deps.config.PUBLIC_URL, name, email: b.email, company, message: b.message,
+          reportUrl: reportId ? `${deps.config.PUBLIC_URL}/r/${reportId}` : null }),
       });
       await markMessageSent(deps.db, id);
     } catch (err) {
