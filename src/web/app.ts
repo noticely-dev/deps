@@ -15,7 +15,7 @@ import opsRoutes from './routes/ops.js';
 import pages from './routes/pages.js';
 import reportRoutes from './routes/report.js';
 import type { Turnstile } from './turnstile.js';
-import { createViews } from './views.js';
+import { assetVersion, createViews } from './views.js';
 
 export interface AppMetrics {
   limited(kind: 'check' | 'global' | 'contact' | 'notify'): void;
@@ -68,7 +68,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     bodyLimit: 11 * 1024 * 1024,
   });
   const views = createViews(deps.config.NODE_ENV === 'production');
-  const common = { siteKey: deps.config.TURNSTILE_SITE_KEY, publicUrl: deps.config.PUBLIC_URL, title: '', turnstile: false, refresh: 0 };
+  const common = { siteKey: deps.config.TURNSTILE_SITE_KEY, v: assetVersion(), publicUrl: deps.config.PUBLIC_URL, title: '', turnstile: false, refresh: 0 };
 
   app.decorateReply('page', function (this: FastifyReply, template: string, data: Record<string, unknown> = {}, status = 200) {
     const html = views.render(template, { ...common, ...data });

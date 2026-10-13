@@ -27,7 +27,7 @@ export default async function notifyRoutes(app: FastifyInstance, deps: AppDeps):
     const { email, list } = parsed.data;
     const ip = clientIp(req);
     if (!(await deps.turnstile.verify(parsed.data['cf-turnstile-response'], ip))) {
-      return reply.page('./notice', { title: 'Verification failed', heading: 'Please complete the verification', message: 'Go back, wait for the check box to turn green, and submit again.', back: true }, 400);
+      return reply.page('./notice', { title: 'Verification failed', heading: 'Please complete the verification', message: 'The automatic bot check did not finish. Go back, wait a few seconds, and submit again.', back: true }, 400);
     }
     if (!(await consume(deps, 'notify', ip, 5))) {
       return reply.page('./notice', { title: 'Too many requests', heading: 'Too many sign-ups from your network today', message: 'Please try again tomorrow.', back: true }, 429);

@@ -43,7 +43,7 @@ export default async function contactRoutes(app: FastifyInstance, deps: AppDeps)
     if (!checkFormTime(deps.config.IP_HASH_SECRET, b.t, now())) return fail('Please take a moment to fill in the form, then send it again.');
     if ((b.message.match(/https?:\/\//gi) ?? []).length > 5) return fail('Please include at most 5 links.');
     const ip = clientIp(req);
-    if (!(await deps.turnstile.verify(b['cf-turnstile-response'], ip))) return fail('The bot check did not pass. Please wait for it to turn green.');
+    if (!(await deps.turnstile.verify(b['cf-turnstile-response'], ip))) return fail('The automatic bot check did not finish. Please wait a few seconds and send again.');
     if (!(await consume(deps, 'contact', ip, 3))) return fail('Too many messages from your network today. Please try again tomorrow.', 429);
 
     const reportId = REPORT_ID_RE.test(b.r) ? b.r : null;

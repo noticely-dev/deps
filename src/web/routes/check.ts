@@ -26,7 +26,7 @@ export default async function checkRoutes(app: FastifyInstance, deps: AppDeps): 
 
     const token = asText(body['cf-turnstile-response']) ?? undefined;
     if (!(await deps.turnstile.verify(token, ip))) {
-      return reply.page('./notice', { title: 'Verification failed', heading: 'Please complete the verification', message: 'The bot check did not pass. Go back, wait for the check box to turn green, and submit again.', back: true }, 400);
+      return reply.page('./notice', { title: 'Verification failed', heading: 'Please complete the verification', message: 'The automatic bot check did not finish. Go back, wait a few seconds, and submit again.', back: true }, 400);
     }
 
     const pkgText = asText(body.packageJsonFile) ?? asText(body.packageJson);

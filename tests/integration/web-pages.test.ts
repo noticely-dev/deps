@@ -36,6 +36,14 @@ describe('pages', () => {
     expect((await t.app.inject({ url: '/favicon.svg' })).statusCode).toBe(200);
   });
 
+  it('versions the stylesheet and script so deploys bypass the static cache', async () => {
+    const body = (await t.app.inject({ url: '/' })).body;
+    const v = /app\.css\?v=([0-9a-f]{10})"/.exec(body)?.[1];
+    expect(v).toBeDefined();
+    expect(body).toContain(`/static/app.js?v=${v}"`);
+    expect(body).toContain('data-appearance="interaction-only"');
+  });
+
   it('renders a friendly 404', async () => {
     const res = await t.app.inject({ url: '/nope' });
     expect(res.statusCode).toBe(404);

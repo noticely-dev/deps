@@ -11,7 +11,7 @@
   <input type="hidden" name="r" value="<%= it.r %>">
   <input type="hidden" name="t" value="<%= it.t %>">
   <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
-  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>"></div>
+  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>" data-appearance="interaction-only"></div>
   <div class="row-actions"><button class="b p" type="submit">Send request</button></div>
   <p class="muted small">Your message is stored for up to 180 days and used only to reply to you. See <a href="/privacy">privacy</a>.</p>
 </form>

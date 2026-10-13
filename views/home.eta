@@ -10,7 +10,7 @@
     <label>…or upload <code>package.json</code> <input type="file" name="packageJsonFile" accept=".json,application/json"></label>
     <label><code>package-lock.json</code> <span class="muted">optional, gives exact versions</span> <input type="file" name="lockfile" accept=".json,application/json"></label>
   </div>
-  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>"></div>
+  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>" data-appearance="interaction-only"></div>
   <div class="row-actions">
     <button class="b p" type="submit">Check dependencies</button>
     <a href="/sample">See a sample report →</a>
