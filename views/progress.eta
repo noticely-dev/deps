@@ -1,0 +1,6 @@
+<% layout('./layout', { refresh: 3, title: 'Checking…' }) %>
+<section class="panel progress" data-status-url="/r/<%= it.id %>/status">
+  <div class="spinner" aria-hidden="true"></div>
+  <h1>Checking <%= it.projectName %>…</h1>
+  <p class="muted">Looking up <%= it.count %> dependencies on npm, OSV.dev and deps.dev. Large projects can take up to 20 seconds.</p>
+</section>

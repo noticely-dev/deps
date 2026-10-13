@@ -1,0 +1,14 @@
+<% layout('./layout') %>
+<article class="panel prose">
+<h1>Privacy</h1>
+<ul>
+<li><b>What is stored:</b> only the dependency names, version ranges and resolved versions from your file, and the resulting report. Never the whole file, scripts or other fields.</li>
+<li><b>How long:</b> reports are deleted automatically after 30 days.</li>
+<li><b>Who sees it:</b> anyone with the report link (it contains a long random id). Package names are sent to the public npm registry, OSV.dev and deps.dev to look them up.</li>
+<li><b>Your IP address:</b> stored only as a keyed hash, for the daily check limit, and deleted after 48 hours.</li>
+<li><b>Emails:</b> if you ask to be notified, your address is stored when you ask and deleted after 7 days unless you click the confirmation link. Once confirmed, it is kept only for that purpose until you unsubscribe (unsubscribed addresses are deleted after 30 days). Every email has an unsubscribe link.</li>
+<li><b>Contact form:</b> messages are kept for up to 180 days.</li>
+<li><b>Bot protection:</b> Cloudflare Turnstile runs on the forms.</li>
+</ul>
+<p>To have data deleted earlier, use the <a href="/contact">contact form</a>.</p>
+</article>

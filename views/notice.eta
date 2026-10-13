@@ -1,0 +1,11 @@
+<% layout('./layout', { turnstile: !!it.notifyList }) %>
+<section class="panel notice">
+  <h1><%= it.heading %></h1>
+  <p><%= it.message %></p>
+  <% if (it.action) { %><form method="post" action="<%= it.action.href %>"><button class="b p" type="submit"><%= it.action.label %></button></form><% } %>
+  <% if (it.notifyList) { %><%~ include('./partials/notify-form', { list: it.notifyList, reportId: it.reportId || '' }) %><% } %>
+  <p class="row-actions">
+    <% if (it.back) { %><a class="b" href="/">← New check</a><% } %>
+    <% if (it.link) { %><a class="b p" href="<%= it.link.href %>"><%= it.link.label %></a><% } %>
+  </p>
+</section>

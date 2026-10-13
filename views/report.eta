@@ -1,0 +1,107 @@
+<% layout('./layout') %>
+<% const r = it.r %>
+<div class="report">
+  <div class="report-head">
+    <div>
+      <h1><%= r.projectName %></h1>
+      <div class="muted small"><%= r.depCount %> direct dependencies · checked <%= r.checkedAt %> · <%= r.hasLockfile ? 'exact versions from lockfile' : 'no lockfile: lowest matching versions (worst case)' %></div>
+    </div>
+    <div class="row-actions">
+      <button type="button" class="b" data-copy="<%= r.shareUrl %>">Copy link</button>
+      <a class="b" href="/r/<%= r.id %>.md">Markdown</a>
+      <a class="b p" href="/">Check another file</a>
+    </div>
+  </div>
+
+  <% if (r.partial) { %><div class="banner"><%= r.partial %></div><% } %>
+
+  <section class="panel summary">
+    <div>
+      <svg class="ring" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Health score <%= r.score %> out of 100">
+        <circle class="track" cx="50" cy="50" r="38" fill="none" stroke-width="10"></circle>
+        <circle class="val <%= r.ringClass %>" cx="50" cy="50" r="38" fill="none" stroke-width="10" stroke-dasharray="<%= r.ring.dash.toFixed(1) %> <%= r.ring.gap.toFixed(1) %>" transform="rotate(-90 50 50)"></circle>
+        <text x="50" y="59" text-anchor="middle"><%= r.score %></text>
+      </svg>
+      <div class="center"><b><%= r.label %></b><div class="muted small">Health score / 100</div></div>
+    </div>
+    <div>
+      <p class="summary-text"><%= r.summary %></p>
+      <div class="kpis">
+        <div class="kpi"><div class="n crit"><%= r.vulnKpi %></div><div class="l">Known vulnerabilities</div></div>
+        <div class="kpi"><div class="n high"><%= r.counts.deprecated %></div><div class="l">Deprecated</div></div>
+        <div class="kpi"><div class="n med"><%= r.counts.maintenance %></div><div class="l">Maintenance risk</div></div>
+        <div class="kpi"><div class="n"><%= r.counts.majorsBehind %></div><div class="l">Major versions behind</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel deps-panel">
+    <div class="deps-tools">
+      <div class="tabs">
+        <button type="button" data-tab="prod" aria-pressed="true">dependencies (<%= r.prodCount %>)</button>
+        <button type="button" data-tab="dev" aria-pressed="false">devDependencies (<%= r.devCount %>)</button>
+      </div>
+      <div class="filters">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="vulnerable" aria-pressed="false">Vulnerable</button>
+        <button type="button" data-filter="deprecated" aria-pressed="false">Deprecated</button>
+        <button type="button" data-filter="maintenance" aria-pressed="false">Maintenance</button>
+      </div>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Package</th><th>In use → Latest</th><th>Last release</th><th>Maint.</th><th>Downloads/wk</th><th>Scorecard</th><th>Risk</th></tr></thead>
+      <tbody>
+      <% r.rows.forEach(function (p) { %>
+        <tr class="row" data-scope="<%= p.scope %>" data-kinds="<%= p.kinds %>" <% if (p.expandable) { %>data-expand="d<%= p.idx %>"<% } %> <% if (p.scope === 'dev') { %>hidden<% } %>>
+          <td><div class="pk"><%= p.name %></div><div class="sub"><%= p.reason %><% if (p.worstCase) { %> · <%= p.worstCase %><% } %></div></td>
+          <td class="mono"><%= p.version %> → <%= p.latest %></td>
+          <td><%= p.lastRelease %></td>
+          <td><%= p.maintainers %></td>
+          <td><%= p.downloads %></td>
+          <td><% if (p.bar) { %><span class="<%= p.bar %>"><span></span></span> <% } %><%= p.scorecard %></td>
+          <td><span class="sev <%= p.risk %>"><%= p.riskLabel %></span></td>
+        </tr>
+        <% if (p.expandable) { %>
+        <tr class="detail" id="d<%= p.idx %>" hidden>
+          <td colspan="7">
+            <% if (p.deprecated) { %><p><b>Deprecation notice:</b> <%= p.deprecated %></p><% } %>
+            <% p.vulns.forEach(function (v) { %>
+              <div><a href="<%= v.url %>" rel="nofollow noopener noreferrer" class="mono"><%= v.id %></a> · <span class="sev <%= v.risk %>"><%= v.riskLabel %></span> · <%= v.summary %><% if (v.fixedIn) { %> · fixed in <span class="mono"><%= v.fixedIn %></span><% } %></div>
+            <% }) %>
+          </td>
+        </tr>
+        <% } %>
+      <% }) %>
+      <% if (r.rows.length === 0) { %><tr><td colspan="7" class="muted">No dependencies to check.</td></tr><% } %>
+      </tbody>
+    </table>
+    <% if (r.skipped.length) { %>
+      <div class="deps-tools muted small">Not checked: <% r.skipped.forEach(function (s, i) { %><%= i ? ', ' : '' %><span class="mono"><%= s.name %></span> (<%= s.reason %>)<% }) %></div>
+    <% } %>
+  </section>
+
+  <aside class="side">
+    <div class="panel">
+      <h3>Recommended upgrade order</h3>
+      <div class="muted small">Highest risk removed per hour first · rough estimates</div>
+      <% if (r.plan.length === 0) { %><p class="muted">Nothing to do right now.</p><% } %>
+      <% r.plan.forEach(function (s) { %>
+        <div class="step"><div class="num"><%= s.n %></div><div><b><%= s.name %>:</b> <%= s.action %><div class="muted small"><%= s.effort %></div></div></div>
+      <% }) %>
+      <% if (r.planTotal) { %><div class="total"><span class="muted">Total estimate</span><b><%= r.planTotal %></b></div><% } %>
+    </div>
+
+    <div class="expert">
+      <b>Need these upgrades done?</b>
+      <div class="chips"><span>Node.js</span><span>MongoDB</span><span>Docker</span><span>Upgrades &amp; migrations</span></div>
+      <p>noticely is built by an independent backend engineer. Fixed price, tested, with a written handover.</p>
+      <a class="b p" href="<%= r.contactUrl %>">Get a fixed-price quote →</a>
+    </div>
+
+    <div class="pdf">
+      <b>Full PDF report</b> <span class="sev none">coming soon</span>
+      <p class="muted small">Findings, evidence and this upgrade plan as a document you can hand to your team or client.</p>
+      <%~ include('./partials/notify-form', { list: 'pdf', reportId: r.id }) %>
+    </div>
+  </aside>
+</div>

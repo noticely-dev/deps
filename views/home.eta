@@ -1,0 +1,24 @@
+<% layout('./layout') %>
+<section class="hero">
+  <h1>Is your Node.js project aging badly?</h1>
+  <p class="lede">Paste or upload your <code>package.json</code> and see which dependencies are <b>vulnerable</b>, <b>deprecated</b>, <b>abandoned</b> or far behind, with a prioritised upgrade plan and effort estimates.</p>
+</section>
+<form class="panel check-form" method="post" action="/check" enctype="multipart/form-data" data-dropzone>
+  <label for="packageJson" class="label">package.json</label>
+  <textarea id="packageJson" name="packageJson" rows="12" spellcheck="false" placeholder='{ "dependencies": { "express": "^5.1.0" } }'></textarea>
+  <div class="files">
+    <label>…or upload <code>package.json</code> <input type="file" name="packageJsonFile" accept=".json,application/json"></label>
+    <label><code>package-lock.json</code> <span class="muted">optional, gives exact versions</span> <input type="file" name="lockfile" accept=".json,application/json"></label>
+  </div>
+  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>"></div>
+  <div class="row-actions">
+    <button class="b p" type="submit">Check dependencies</button>
+    <a href="/sample">See a sample report →</a>
+  </div>
+  <p class="muted small">5 free checks per day. Only dependency names and versions are stored, for 30 days. Private <code>@scope/…</code> packages are listed but never looked up anywhere except the public npm registry.</p>
+</form>
+<section class="how">
+  <div class="panel"><b>1 · Paste</b><p class="muted">Your <code>package.json</code>, plus the lockfile if you want exact versions.</p></div>
+  <div class="panel"><b>2 · Check</b><p class="muted">Each package is checked against npm, OSV.dev and deps.dev for vulnerabilities, deprecation and maintenance.</p></div>
+  <div class="panel"><b>3 · Fix</b><p class="muted">Get a health score, a plain-English summary and an upgrade plan ordered by risk removed per hour.</p></div>
+</section>

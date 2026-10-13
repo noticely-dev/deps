@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= it.title ? it.title + ' · noticely/deps' : 'noticely/deps · dependency health check for npm projects' %></title>
+<meta name="description" content="Check a package.json for vulnerable, deprecated and abandoned dependencies. Free report with a prioritised upgrade plan.">
+<% if (it.refresh) { %><meta http-equiv="refresh" content="<%= it.refresh %>"><% } %>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/app.css">
+<script src="/static/app.js" defer></script>
+<% if (it.turnstile) { %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>
+</head>
+<body>
+<header class="nav">
+  <a class="logo" href="/"><img src="/static/brand/noticely-mark.svg" alt="" width="26" height="26"><span>noticely<b>/deps</b></span></a>
+  <nav>
+    <a href="/">New check</a>
+    <a href="/methodology">Methodology</a>
+    <a href="https://github.com/noticely-dev/deps" rel="noopener">GitHub ↗</a>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch light/dark theme">◐</button>
+  </nav>
+</header>
+<main class="wrap"><%~ it.body %></main>
+<footer class="foot">
+  <span>Data: npm registry · OSV.dev · deps.dev / OpenSSF Scorecard</span>
+  <a href="/privacy">Privacy</a>
+  <span>Reports are deleted after 30 days</span>
+  <span>Open source · MIT</span>
+</footer>
+</body>
+</html>

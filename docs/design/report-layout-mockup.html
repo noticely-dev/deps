@@ -1,0 +1,234 @@
+<h2>A (dark) vs C (refined)</h2>
+<p class="subtitle">Same data in both. <b>A</b> leads with the summary and the upgrade plan, for the person deciding whether to fix things. <b>C</b> leads with the data and filters, for the engineer doing the work. Both now have the same expert block and the "PDF – notify me" flow. Click one.</p>
+
+<style>
+  .stack { display: flex; flex-direction: column; gap: 40px; margin-top: 18px; }
+  .opt { border: 2px solid transparent; border-radius: 14px; padding: 10px; cursor: pointer; }
+  .opt.selected { border-color: #3b82f6; }
+  .opt-title { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 10px; flex-wrap: wrap; }
+  .opt-title h3 { margin: 0; } .opt-title p { margin: 0; color: #667085; font-size: 14px; }
+  .frame { border-radius: 10px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.35); text-align: left; }
+  .frame * { box-sizing: border-box; }
+  .chrome { background: #1f2229; padding: 7px 12px; display: flex; gap: 6px; align-items: center; font: 11px system-ui; color: #9aa1ad; }
+  .chrome i { width: 9px; height: 9px; border-radius: 50%; background: #3a3f4b; display: inline-block; }
+  .chrome span { margin-left: 10px; background: #2a2e37; padding: 2px 10px; border-radius: 5px; }
+  .mono { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; }
+
+  .sev { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .sev::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .s-crit { background: rgba(240,68,56,.14); color: #fda29b; } .s-high { background: rgba(247,144,9,.14); color: #fdb022; }
+  .s-med { background: rgba(250,204,21,.11); color: #fde68a; } .s-ok { background: rgba(34,197,94,.12); color: #86efac; } .s-low { background: rgba(148,163,184,.14); color: #cbd5e1; }
+
+  /* ================= A dark ================= */
+  .A { --bg:#0b0d12; --panel:#12151c; --panel2:#171b24; --line:#232838; --fg:#e6e8ee; --mut:#8b93a7; --acc:#3b82f6;
+       background: var(--bg); color: var(--fg); font: 13px/1.5 Inter, system-ui, sans-serif; }
+  .A .nav { border-bottom: 1px solid var(--line); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .A .logo { font-weight: 800; letter-spacing: -.02em; font-size: 15px; } .A .logo b { color: var(--acc); }
+  .A .navlinks { color: var(--mut); display: flex; gap: 18px; font-size: 12px; }
+  .A .wrap { padding: 22px 24px; display: grid; grid-template-columns: 1fr 290px; gap: 18px; }
+  .A .head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .A h1 { font-size: 21px; margin: 0 0 2px; letter-spacing: -.01em; }
+  .A .muted { color: var(--mut); font-size: 12px; }
+  .A .b { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); font-weight: 600; font-size: 12px; white-space: nowrap; }
+  .A .b.p { background: var(--acc); border-color: var(--acc); color: #fff; }
+  .A .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .A .summary { grid-column: 1 / -1; display: grid; grid-template-columns: 180px 1fr; gap: 18px; align-items: center; }
+  .A .ring { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#f79009 0 58%, #232838 58% 100%); display: grid; place-items: center; margin: 0 auto 6px; }
+  .A .ring div { width: 80px; height: 80px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-size: 26px; font-weight: 800; }
+  .A .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .A .kpi { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .A .kpi .n { font-size: 22px; font-weight: 700; } .A .kpi .l { color: var(--mut); font-size: 11px; }
+  .A table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .A th { text-align: left; color: var(--mut); font-weight: 500; padding: 9px 8px; border-bottom: 1px solid var(--line); }
+  .A td { padding: 9px 8px; border-bottom: 1px solid #1a1e29; vertical-align: middle; }
+  .A tr.hl td { background: rgba(240,68,56,.05); }
+  .A td .pk { font-weight: 600; } .A td .sub { color: var(--mut); font-size: 11px; }
+  .A .bar { height: 6px; border-radius: 3px; background: var(--line); width: 56px; overflow: hidden; display: inline-block; vertical-align: middle; } .A .bar span { display: block; height: 100%; }
+  .A .side h4 { margin: 0 0 4px; font-size: 13px; }
+  .A .step { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .A .num { width: 20px; height: 20px; border-radius: 50%; background: rgba(59,130,246,.15); color: #93c5fd; font-weight: 700; font-size: 11px; display: grid; place-items: center; flex: none; }
+  .A .total { display: flex; justify-content: space-between; padding-top: 10px; font-size: 12px; }
+  .A .expert { margin-top: 14px; border: 1px solid #2c3550; background: linear-gradient(160deg, #141b2e, #0f1320); border-radius: 12px; padding: 16px; }
+  .A .av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: grid; place-items: center; font-weight: 700; flex: none; }
+  .A .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 10px; } .A .chips span { font-size: 10px; padding: 2px 7px; border-radius: 999px; border: 1px solid #2c3550; color: #b6c2e0; }
+  .A .pdf { margin-top: 10px; border: 1px dashed var(--line); border-radius: 10px; padding: 12px; font-size: 12px; }
+  .A .in { display: flex; gap: 6px; margin-top: 8px; } .A .in div { flex: 1; border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; color: #5b6377; background: var(--bg); font-size: 12px; }
+  .A .src { grid-column: 1 / -1; color: #5b6377; font-size: 11px; display: flex; gap: 18px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
+
+  /* ================= C refined ================= */
+  .C { --bg:#09090b; --panel:#111113; --line:#27272a; --fg:#e4e4e7; --mut:#71717a; --acc:#a78bfa;
+       background: var(--bg); color: var(--fg); font: 13px/1.5 Inter, system-ui, sans-serif; display: grid; grid-template-columns: 210px 1fr; }
+  .C .sb { border-right: 1px solid var(--line); padding: 18px 14px; }
+  .C .logo { font-weight: 800; margin-bottom: 16px; } .C .logo b { color: var(--acc); }
+  .C .score { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 6px; background: var(--panel); }
+  .C .score .n { font-size: 28px; font-weight: 800; color: #fdb022; line-height: 1.1; }
+  .C .meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 8px; overflow: hidden; } .C .meter span { display: block; height: 100%; width: 58%; background: linear-gradient(90deg, #f04438, #fdb022); }
+  .C .grp { color: var(--mut); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 6px; }
+  .C .it { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 6px; font-size: 12px; color: #a1a1aa; }
+  .C .it.on { background: #1c1c20; color: #fff; }
+  .C .main { padding: 18px 22px; min-width: 0; }
+  .C .hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+  .C h1 { font-size: 18px; margin: 0; }
+  .C .muted { color: var(--mut); font-size: 12px; }
+  .C .b { padding: 6px 11px; border-radius: 7px; border: 1px solid #3f3f46; font-weight: 600; font-size: 12px; background: #18181b; white-space: nowrap; }
+  .C .b.p { background: #fafafa; color: #09090b; border-color: #fafafa; }
+  .C .plan { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 12px 14px; margin-bottom: 14px; }
+  .C .plan-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  .C .ps { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: #0d0d0f; font-size: 12px; }
+  .C .ps .k { color: var(--acc); font-size: 11px; font-weight: 700; }
+  .C table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .C th { text-align: left; color: var(--mut); font-weight: 500; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+  .C td { padding: 8px 6px; border-bottom: 1px solid #1c1c1f; }
+  .C .spark { display: inline-flex; gap: 2px; align-items: flex-end; height: 16px; } .C .spark i { width: 4px; background: #3f3f46; border-radius: 1px; display: block; }
+  .C .spark.on i { background: var(--acc); }
+  .C .open td { background: var(--panel); }
+  .C .detail { background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 14px 14px 26px; font-size: 12px; }
+  .C .adv { display: grid; grid-template-columns: 160px 50px 1fr 80px; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+  .C .cmd { margin-top: 8px; background: #000; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; display: flex; justify-content: space-between; }
+  .C .foot { margin-top: 16px; border: 1px solid #3b2f63; border-radius: 12px; padding: 14px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; background: linear-gradient(90deg, #111113, #1a1530); }
+  .C .av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #3b82f6); display: grid; place-items: center; font-weight: 700; }
+</style>
+
+<div class="stack">
+
+<!-- ======================= A DARK ======================= -->
+<div class="opt" data-choice="A-dark" onclick="toggleSelect(this)">
+  <div class="opt-title"><h3>A · Executive dashboard, dark</h3><p>Summary first, then the plan in the sidebar. Built for the person deciding whether to pay for the fixes.</p></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>deps.noticely.dev/r/k3x9</span></div>
+    <div class="A">
+      <div class="nav"><div class="logo">noticely<b>/deps</b></div><div class="navlinks"><span>New check</span><span>Methodology</span><span>GitHub ↗</span><span>◐</span></div></div>
+      <div class="wrap">
+        <div class="head">
+          <div><h1>acme-shop-api</h1><div class="muted">12 direct dependencies · checked 12 Oct 2026, 18:42 · <span class="mono">deps.noticely.dev/r/k3x9</span></div></div>
+          <div style="display:flex;gap:8px"><span class="b">Copy link</span><span class="b p">Check another file</span></div>
+        </div>
+
+        <div class="summary panel">
+          <div style="text-align:center"><div class="ring"><div>58</div></div><div style="font-weight:600">Needs attention</div><div class="muted">Health score / 100</div></div>
+          <div>
+            <div style="font-size:15px;line-height:1.55"><b>1 critical vulnerability with a one-line fix</b>, 2 packages abandoned by their authors, and 3 more that depend on a single maintainer or haven't been updated in years. Fixing the top 3 removes all known security exposure in about <b>1–1.5 developer days</b>.</div>
+            <div class="kpis">
+              <div class="kpi"><div class="n" style="color:#fda29b">7</div><div class="l">Known vulnerabilities</div></div>
+              <div class="kpi"><div class="n" style="color:#fdb022">2</div><div class="l">Deprecated</div></div>
+              <div class="kpi"><div class="n" style="color:#fde68a">3</div><div class="l">Maintenance risk</div></div>
+              <div class="kpi"><div class="n">5<span class="muted" style="font-size:13px">/12</span></div><div class="l">Major versions behind</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:0">
+          <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center"><b>Dependencies</b><span class="muted">Sorted by risk ▾ · All (12) · Vulnerable · Deprecated · Maintenance</span></div>
+          <table>
+            <tr><th>Package</th><th>In use → Latest</th><th>Last release</th><th>Maint.</th><th>Downloads/wk</th><th>Scorecard</th><th>Risk</th></tr>
+            <tr class="hl"><td><div class="pk">lodash</div><div class="sub">6 advisories · fixed in 4.17.21</div></td><td class="mono">4.17.15 → 4.17.21</td><td>Feb 2021</td><td>3</td><td>58.2M</td><td><span class="bar"><span style="width:62%;background:#f79009"></span></span> 6.2</td><td><span class="sev s-crit">Critical</span></td></tr>
+            <tr><td><div class="pk">request</div><div class="sub">Deprecated Feb 2020 · use native fetch</div></td><td class="mono">2.88.2 → —</td><td>Feb 2020</td><td>4</td><td>12.4M</td><td><span class="bar"><span style="width:31%;background:#f04438"></span></span> 3.1</td><td><span class="sev s-high">High</span></td></tr>
+            <tr><td><div class="pk">node-uuid</div><div class="sub">Deprecated · renamed to uuid</div></td><td class="mono">1.4.8 → —</td><td>Mar 2017</td><td>2</td><td>1.1M</td><td><span class="bar"><span style="width:25%;background:#f04438"></span></span> 2.5</td><td><span class="sev s-high">High</span></td></tr>
+            <tr><td><div class="pk">left-pad</div><div class="sub">Single maintainer · idle 9 years</div></td><td class="mono">1.3.0 → 1.3.0</td><td>Apr 2018</td><td style="color:#fde68a">1</td><td>1.9M</td><td><span class="bar"><span style="width:28%;background:#f79009"></span></span> 2.8</td><td><span class="sev s-med">Medium</span></td></tr>
+            <tr><td><div class="pk">moment</div><div class="sub">Maintenance mode · luxon / date-fns</div></td><td class="mono">2.29.4 → 2.30.1</td><td>Dec 2023</td><td>5</td><td>24.7M</td><td><span class="bar"><span style="width:55%;background:#f79009"></span></span> 5.5</td><td><span class="sev s-med">Medium</span></td></tr>
+            <tr><td><div class="pk">mongoose</div><div class="sub">2 majors behind</div></td><td class="mono">6.12.0 → 8.19.1</td><td>Oct 2026</td><td>4</td><td>3.4M</td><td><span class="bar"><span style="width:78%;background:#12b76a"></span></span> 7.8</td><td><span class="sev s-low">Low</span></td></tr>
+            <tr><td><div class="pk">express</div><div class="sub">Up to date</div></td><td class="mono">5.1.0 → 5.1.0</td><td>Sep 2026</td><td>6</td><td>41.0M</td><td><span class="bar"><span style="width:85%;background:#12b76a"></span></span> 8.5</td><td><span class="sev s-ok">Healthy</span></td></tr>
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:9px">+ 5 more healthy · click any row for advisories and details</td></tr>
+          </table>
+        </div>
+
+        <div class="side">
+          <div class="panel">
+            <h4>Recommended upgrade order</h4><div class="muted" style="margin-bottom:4px">Highest risk reduction per hour first</div>
+            <div class="step"><div class="num">1</div><div><b>lodash → 4.17.21</b><div class="muted">Patch, no API changes · ~15 min</div></div></div>
+            <div class="step"><div class="num">2</div><div><b>node-uuid → uuid@11</b><div class="muted">Rename + imports · ~30 min</div></div></div>
+            <div class="step"><div class="num">3</div><div><b>request → native fetch</b><div class="muted">5–10 call sites typical · 0.5–1 day</div></div></div>
+            <div class="step" style="border:0"><div class="num">4</div><div><b>mongoose 6 → 8</b><div class="muted">Breaking query changes · 1–2 days</div></div></div>
+            <div class="total"><span class="muted">Total estimate</span><b>2.5–4 days</b></div>
+          </div>
+
+          <div class="expert">
+            <div style="display:flex;gap:10px;align-items:center"><div class="av">n</div><div><b>noticely</b><div style="font-size:11px;color:#9aa6c4">an independent backend engineer</div></div></div>
+            <div class="chips"><span>Node.js</span><span>MongoDB</span><span>Docker</span><span>Upgrades &amp; migrations</span></div>
+            <div style="font-size:12px;color:#c7cfe2;margin-bottom:12px">I built this tool. I can do these upgrades for you at a fixed price, with tests and a written handover.</div>
+            <span class="b p" style="display:block;text-align:center">Get a fixed-price quote →</span>
+          </div>
+
+          <div class="pdf">
+            <b>Full PDF report</b> <span class="sev s-low" style="margin-left:4px">coming soon</span>
+            <div class="muted" style="margin-top:4px">Findings, evidence and an upgrade plan you can hand to your team or client.</div>
+            <div class="in"><div>you@company.com</div><span class="b">Notify me</span></div>
+          </div>
+        </div>
+
+        <div class="src"><span>Data: npm registry · OSV.dev · deps.dev / OpenSSF Scorecard</span><span>Reports are deleted after 30 days</span><span>Open source · MIT</span><span>Light / dark follows your system</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= C REFINED ======================= -->
+<div class="opt" data-choice="C-refined" onclick="toggleSelect(this)">
+  <div class="opt-title"><h3>C · Developer dashboard, refined</h3><p>Data first: score and filters on the left, a fix-order strip, then a dense table with expandable advisories and copy-paste commands.</p></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>deps.noticely.dev/r/k3x9</span></div>
+    <div class="C">
+      <div class="sb">
+        <div class="logo">noticely<b>/deps</b></div>
+        <div class="score"><div class="muted">Health score</div><div class="n">58<span class="muted" style="font-size:12px">/100</span></div><div class="muted">Needs attention</div><div class="meter"><span></span></div></div>
+        <div class="grp">Filter</div>
+        <div class="it on"><span>All packages</span><span>12</span></div>
+        <div class="it"><span>Vulnerable</span><span style="color:#fda29b">1</span></div>
+        <div class="it"><span>Deprecated</span><span style="color:#fdb022">2</span></div>
+        <div class="it"><span>Single maintainer</span><span style="color:#fde68a">1</span></div>
+        <div class="it"><span>Idle &gt; 2 years</span><span>3</span></div>
+        <div class="it"><span>Majors behind</span><span>5</span></div>
+        <div class="grp">Scope</div>
+        <div class="it on"><span>dependencies</span><span>12</span></div>
+        <div class="it"><span>devDependencies</span><span>19</span></div>
+        <div class="grp">Export</div>
+        <div class="it"><span>Markdown (for a PR)</span><span>↓</span></div>
+        <div class="it"><span>JSON</span><span>↓</span></div>
+        <div class="it"><span>PDF report</span><span style="color:#a78bfa">notify me</span></div>
+      </div>
+      <div class="main">
+        <div class="hdr">
+          <div><h1>acme-shop-api <span class="muted mono">@3.4.0</span></h1><div class="muted">12 deps · scanned in 2.1s · 12 Oct 2026 18:42 · npm · OSV · deps.dev</div></div>
+          <div style="display:flex;gap:8px"><span class="b">Share</span><span class="b p">New scan</span></div>
+        </div>
+
+        <div class="plan">
+          <div style="display:flex;justify-content:space-between"><b>Fix order</b><span class="muted">total ≈ 2.5–4 dev days · top 3 remove all known vulnerabilities</span></div>
+          <div class="plan-steps">
+            <div class="ps"><div class="k">1 · 15 min</div><span class="mono">lodash@4.17.21</span></div>
+            <div class="ps"><div class="k">2 · 30 min</div><span class="mono">node-uuid → uuid@11</span></div>
+            <div class="ps"><div class="k">3 · 0.5–1 day</div><span class="mono">request → fetch</span></div>
+            <div class="ps"><div class="k">4 · 1–2 days</div><span class="mono">mongoose 6 → 8</span></div>
+          </div>
+        </div>
+
+        <table>
+          <tr><th>Package</th><th>Version</th><th>Latest</th><th>Releases (24 mo)</th><th>Maint.</th><th>Downloads/wk</th><th>Status</th></tr>
+          <tr class="open"><td class="mono">▾ lodash</td><td class="mono">4.17.15</td><td class="mono">4.17.21</td><td><span class="spark"><i style="height:2px"></i><i style="height:2px"></i><i style="height:3px"></i><i style="height:2px"></i><i style="height:2px"></i><i style="height:2px"></i><i style="height:2px"></i><i style="height:2px"></i></span></td><td>3</td><td>58.2M</td><td><span class="sev s-crit">6 vulns · 1 critical</span></td></tr>
+          <tr><td colspan="7" class="detail">
+            <div class="adv muted"><span>Advisory</span><span>CVSS</span><span>Summary</span><span>Fixed in</span></div>
+            <div class="adv"><span class="mono">GHSA-35jh-r3h4-6jhm</span><span style="color:#fda29b">7.2</span><span>Command injection via template</span><span class="mono">4.17.21</span></div>
+            <div class="adv"><span class="mono">GHSA-p6mc-m468-83gw</span><span style="color:#fdb022">7.4</span><span>Prototype pollution in zipObjectDeep</span><span class="mono">4.17.16</span></div>
+            <div class="adv" style="border:0"><span class="mono muted">+ 4 more</span><span></span><span class="muted">One upgrade fixes all six</span><span></span></div>
+            <div class="cmd mono"><span>npm install lodash@4.17.21</span><span class="muted">copy</span></div>
+          </td></tr>
+          <tr><td class="mono">▸ request</td><td class="mono">2.88.2</td><td class="mono muted">deprecated</td><td><span class="spark"><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i></span></td><td>4</td><td>12.4M</td><td><span class="sev s-high">deprecated 2020</span></td></tr>
+          <tr><td class="mono">▸ node-uuid</td><td class="mono">1.4.8</td><td class="mono muted">→ uuid</td><td><span class="spark"><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i></span></td><td>2</td><td>1.1M</td><td><span class="sev s-high">renamed</span></td></tr>
+          <tr><td class="mono">▸ left-pad</td><td class="mono">1.3.0</td><td class="mono">1.3.0</td><td><span class="spark"><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i></span></td><td style="color:#fde68a">1</td><td>1.9M</td><td><span class="sev s-med">1 maintainer · idle 9y</span></td></tr>
+          <tr><td class="mono">▸ moment</td><td class="mono">2.29.4</td><td class="mono">2.30.1</td><td><span class="spark on"><i style="height:3px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:4px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i><i style="height:1px"></i></span></td><td>5</td><td>24.7M</td><td><span class="sev s-med">maintenance mode</span></td></tr>
+          <tr><td class="mono">▸ mongoose</td><td class="mono">6.12.0</td><td class="mono">8.19.1</td><td><span class="spark on"><i style="height:8px"></i><i style="height:12px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:13px"></i><i style="height:11px"></i><i style="height:15px"></i></span></td><td>4</td><td>3.4M</td><td><span class="sev s-low">2 majors behind</span></td></tr>
+          <tr><td class="mono">▸ express</td><td class="mono">5.1.0</td><td class="mono">5.1.0</td><td><span class="spark on"><i style="height:6px"></i><i style="height:9px"></i><i style="height:5px"></i><i style="height:8px"></i><i style="height:12px"></i><i style="height:7px"></i><i style="height:10px"></i><i style="height:9px"></i></span></td><td>6</td><td>41.0M</td><td><span class="sev s-ok">healthy</span></td></tr>
+          <tr><td colspan="7" class="muted" style="text-align:center;padding:9px">+ 5 more healthy</td></tr>
+        </table>
+
+        <div class="foot">
+          <div class="av">n</div>
+          <div><b>noticely</b> <span class="muted">· an independent backend engineer · Node.js, MongoDB, Docker</span><div class="muted" style="margin-top:2px;color:#a1a1aa">I built this tool. I can do the fix order above for you at a fixed price, tested, with a written handover.</div></div>
+          <span class="b p">Get a quote →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>

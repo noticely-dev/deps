@@ -1,0 +1,24 @@
+<% layout('./layout') %>
+<article class="panel prose">
+<h1>Methodology</h1>
+<p>Every number on a report comes from the rules below. They are deliberately simple, so you can check them.</p>
+<h2>Versions</h2>
+<p>With a <code>package-lock.json</code>, the exact installed version is checked. Without one, the <b>lowest</b> published version your range allows is checked (worst case), and findings are marked “may already be fixed”.</p>
+<h2>Findings</h2>
+<table>
+<tr><th>Finding</th><th>Risk</th></tr>
+<tr><td>Known vulnerability (OSV.dev)</td><td>The advisory's own severity: Critical, High, Medium (moderate) or Low. Without one: Critical for a known malicious package, otherwise Medium</td></tr>
+<tr><td>Package deprecated by its authors</td><td>High</td></tr>
+<tr><td>Only the version you use is deprecated</td><td>Medium</td></tr>
+<tr><td>No release for more than 2 years</td><td>Medium</td></tr>
+<tr><td>Single npm maintainer</td><td>Low (Medium if also idle for 2 years)</td></tr>
+<tr><td>1–2 major versions behind / 3 or more</td><td>Low / Medium</td></tr>
+</table>
+<p>A package's risk is its worst finding. <code>@types/*</code> packages skip the single-maintainer and major-versions-behind findings: DefinitelyTyped publishes all of them under one account, and their major version follows the runtime or library they describe.</p>
+<h2>Health score</h2>
+<p>Start at 100 and subtract per package: Critical −25, High −12, Medium −5, Low −1. devDependencies count half. The score never goes below 0. <b>85–100</b> Healthy, <b>60–84</b> Needs attention, <b>below 60</b> At risk.</p>
+<h2>Upgrade plan and estimates</h2>
+<p>Steps are ordered by risk removed per hour of work. Estimates are rough ranges: patch or minor upgrade ~15 min, renamed package ~30 min, major upgrade 0.5–1 day plus 0.5 day per extra major, replacing a deprecated package 0.5–1 day. Low-risk maintenance findings are listed as “keep an eye on it”, with no estimate.</p>
+<h2>Data sources</h2>
+<p>npm registry (versions, deprecation, maintainers, release dates), npm download counts, OSV.dev (vulnerabilities), deps.dev (source repository and OpenSSF Scorecard). Data is cached for 24 hours.</p>
+</article>

@@ -1,0 +1,11 @@
+<form class="notify" method="post" action="/notify">
+  <input type="hidden" name="list" value="<%= it.list %>">
+  <input type="hidden" name="r" value="<%= it.reportId %>">
+  <label class="sr-only" for="notify-email-<%= it.list %>">Email</label>
+  <div class="in">
+    <input id="notify-email-<%= it.list %>" type="email" name="email" required maxlength="254" placeholder="you@company.com" autocomplete="email">
+    <button class="b" type="submit">Notify me</button>
+  </div>
+  <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>" data-size="flexible"></div>
+  <p class="muted small">One email when it's available, with a confirmation link first. Unsubscribe any time.</p>
+</form>

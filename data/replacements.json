@@ -1,0 +1,14 @@
+{
+  "request": { "suggestion": "native fetch or undici", "effort": "replace" },
+  "request-promise": { "suggestion": "native fetch or undici", "effort": "replace" },
+  "request-promise-native": { "suggestion": "native fetch or undici", "effort": "replace" },
+  "node-uuid": { "suggestion": "uuid", "effort": "rename" },
+  "moment": { "suggestion": "luxon or date-fns", "effort": "replace" },
+  "left-pad": { "suggestion": "String.prototype.padStart", "effort": "patch" },
+  "querystring": { "suggestion": "URLSearchParams", "effort": "rename" },
+  "mkdirp": { "suggestion": "fs.mkdir with { recursive: true }", "effort": "rename" },
+  "node-sass": { "suggestion": "sass", "effort": "rename" },
+  "tslint": { "suggestion": "ESLint with typescript-eslint", "effort": "replace" },
+  "babel-eslint": { "suggestion": "@babel/eslint-parser", "effort": "rename" },
+  "core-js-pure": { "suggestion": "core-js 3", "effort": "major" }
+}

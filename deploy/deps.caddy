@@ -1,0 +1,11 @@
+deps.noticely.dev {
+	import cf_tls
+	import common
+	@internal path /metrics /metrics/*
+	respond @internal "Not found" 404
+	# {client_ip} is the visitor's IP only for requests that came through Cloudflare (global trusted_proxies +
+	# client_ip_headers CF-Connecting-IP); otherwise it is the peer address, so a spoofed header is replaced.
+	reverse_proxy deps-web:8080 {
+		header_up CF-Connecting-IP {client_ip}
+	}
+}

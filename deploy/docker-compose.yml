@@ -1,0 +1,41 @@
+services:
+  web:
+    image: ghcr.io/noticely-dev/deps:${TAG:-latest}
+    container_name: deps-web
+    restart: unless-stopped
+    # Let in-flight checks (30 s timeout) finish on shutdown before Docker kills the process.
+    stop_grace_period: 40s
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@deps-mongo:27017/?authSource=admin
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    mem_limit: 512m
+    depends_on: [mongo]
+    networks: [web, internal]
+
+  mongo:
+    image: mongo:8.0
+    container_name: deps-mongo
+    restart: unless-stopped
+    command: ['--wiredTigerCacheSizeGB', '0.25']
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes: ['mongo-data:/data/db']
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 1g
+    networks: [internal]
+
+volumes:
+  mongo-data:
+
+networks:
+  web:
+    external: true
+  internal:
+    name: deps-internal
+    internal: true
