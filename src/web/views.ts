@@ -8,8 +8,8 @@ export function createViews(production: boolean): Eta {
 }
 
 // Content hash of the stylesheet and script, appended as ?v= so a deploy is never hidden behind the 1-day static cache.
-export function assetVersion(): string {
+export function assetVersion(files = ['app.css', 'app.js']): string {
   const h = createHash('sha256');
-  for (const f of ['app.css', 'app.js']) h.update(readFileSync(path.resolve('public', f)));
+  for (const f of files) h.update(readFileSync(path.resolve('public', f)));
   return h.digest('hex').slice(0, 10);
 }

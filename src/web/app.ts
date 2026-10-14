@@ -17,6 +17,12 @@ import reportRoutes from './routes/report.js';
 import type { Turnstile } from './turnstile.js';
 import { assetVersion, createViews } from './views.js';
 
+
+/** Pages that search engines may index; everything else (reports, notices, forms' results) is noindex. */
+const INDEXABLE = new Set(['/', '/methodology', '/privacy', '/contact', '/r/sample', '/robots.txt', '/sitemap.xml']);
+const SITEMAP = ['/', '/methodology', '/r/sample', '/privacy', '/contact'];
+const isIndexable = (method: string, path: string, status: number) => (method === 'GET' || method === 'HEAD') && status === 200 && INDEXABLE.has(path);
+
 export interface AppMetrics {
   limited(kind: 'check' | 'global' | 'contact' | 'notify'): void;
   confirmed(list: 'pdf' | 'pack'): void;
@@ -68,20 +74,25 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     bodyLimit: 11 * 1024 * 1024,
   });
   const views = createViews(deps.config.NODE_ENV === 'production');
-  const common = { siteKey: deps.config.TURNSTILE_SITE_KEY, v: assetVersion(), publicUrl: deps.config.PUBLIC_URL, title: '', turnstile: false, refresh: 0 };
+  const common = { siteKey: deps.config.TURNSTILE_SITE_KEY, v: assetVersion(), ogV: assetVersion(['og.png']), publicUrl: deps.config.PUBLIC_URL, title: '', turnstile: false, refresh: 0 };
 
   app.decorateReply('page', function (this: FastifyReply, template: string, data: Record<string, unknown> = {}, status = 200) {
-    const html = views.render(template, { ...common, ...data });
+    const urlPath = this.request.url.split('?')[0] ?? '/';
+    const indexable = isIndexable(this.request.method, urlPath, status);
+    const html = views.render(template, { ...common, url: `${deps.config.PUBLIC_URL}${urlPath}`, indexable, ...data });
     return this.code(status).type('text/html; charset=utf-8').send(html);
   });
 
-  app.addHook('onSend', async (_req, reply, payload) => {
+  app.addHook('onSend', async (req, reply, payload) => {
     reply.header('Content-Security-Policy', CSP);
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('X-Frame-Options', 'DENY');
     reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
     reply.header('Cross-Origin-Opener-Policy', 'same-origin');
+    // Only the public pages may appear in search results: reports are private links that expire after 30 days.
+    const urlPath = req.url.split('?')[0] ?? '/';
+    if (!urlPath.startsWith('/static/') && !isIndexable(req.method, urlPath, reply.statusCode)) reply.header('X-Robots-Tag', 'noindex');
     return payload;
   });
 
@@ -96,6 +107,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   for (const [route, file] of [['/favicon.ico', 'favicon.ico'], ['/favicon.svg', 'favicon.svg'], ['/apple-touch-icon.png', 'apple-touch-icon.png']] as const) {
     app.get(route, (_req, reply) => reply.sendFile(`brand/${file}`));
   }
+
+  app.get('/robots.txt', (_req, reply) => reply.type('text/plain; charset=utf-8').send(`User-agent: *\nAllow: /\n\nSitemap: ${deps.config.PUBLIC_URL}/sitemap.xml\n`));
+  app.get('/sitemap.xml', (_req, reply) => reply.type('application/xml; charset=utf-8').send(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${
+      SITEMAP.map((p) => `  <url><loc>${deps.config.PUBLIC_URL}${p}</loc></url>`).join('\n')}\n</urlset>\n`));
 
   app.setNotFoundHandler((_req, reply) =>
     reply.page('./notice', { title: 'Page not found', heading: 'Page not found', message: 'This page does not exist, or the report has expired (reports are kept for 30 days).' }, 404));

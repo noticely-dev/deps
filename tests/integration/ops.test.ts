@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ensureSample } from '../../src/check/sample.js';
 import { createMetrics } from '../../src/metrics.js';
-import { getReport, upsertSampleReport } from '../../src/store/reports.js';
+import { getReport, promoteSample, setReportFailed, upsertSampleReport } from '../../src/store/reports.js';
 import { testApp } from '../helpers/app.js';
 import { fakeSources, npmInfo } from '../helpers/fakes.js';
 
@@ -34,6 +34,29 @@ describe('ops', () => {
     const res = await t.app.inject({ url: '/sample' });
     expect(res.statusCode).toBe(302);
     expect(res.headers.location).toBe('/r/sample');
+  });
+
+  it('keeps the current sample visible while it is rebuilt, and keeps it when the rebuild fails', async () => {
+    const now = new Date();
+    await t.db.collection('reports').deleteMany({ _id: { $in: ['sample', 'sample-next'] } } as never);
+    await ensureSample(t.db, t.runner, 'data/sample-package.json', now);
+    await t.runner.idle();
+    const first = await getReport(t.db, 'sample');
+    expect(first?.status).toBe('done');
+
+    const later = new Date(now.getTime() + 25 * 3_600_000);
+    expect(await ensureSample(t.db, t.runner, 'data/sample-package.json', later)).toBe(true);
+    expect((await getReport(t.db, 'sample'))?.status).toBe('done'); // still the old one while the new one runs
+    await t.runner.idle();
+    expect((await getReport(t.db, 'sample'))?.createdAt).toEqual(later);
+    expect(await getReport(t.db, 'sample-next')).toBeNull();
+
+    await upsertSampleReport(t.db, { projectName: 'broken', hasLockfile: false, deps: [], skipped: [] }, later, 'sample-next');
+    await setReportFailed(t.db, 'sample-next', 'error');
+    await promoteSample(t.db);
+    expect(await getReport(t.db, 'sample')).toMatchObject({ status: 'done', createdAt: later });
+    expect(await getReport(t.db, 'sample-next')).toBeNull();
+    expect((await t.app.inject({ url: '/r/sample-next' })).statusCode).toBe(404);
   });
 
   it('rebuilds a sample left running for more than 3 minutes', async () => {

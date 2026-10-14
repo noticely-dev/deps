@@ -20,6 +20,10 @@ export async function hitLimit(db: Db, key: string, limit: number, now: Date, re
   }
 }
 
+export async function releaseLimit(db: Db, key: string): Promise<void> {
+  await db.collection<LimitDoc>('ratelimits').updateOne({ _id: key, count: { $gt: 0 } }, { $inc: { count: -1 } });
+}
+
 export function dayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
 }

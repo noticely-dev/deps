@@ -27,8 +27,21 @@ export async function createReport(db: Db, r: NewReport, now: Date): Promise<voi
   await reports(db).insertOne({ ...r, status: 'running', createdAt: now, expiresAt: new Date(now.getTime() + REPORT_TTL_MS) });
 }
 
-export async function upsertSampleReport(db: Db, r: Omit<NewReport, '_id'>, now: Date): Promise<void> {
-  await reports(db).replaceOne({ _id: 'sample' }, { ...r, status: 'running', createdAt: now }, { upsert: true });
+/** The sample's replacement is checked under this id, which REPORT_ID_RE never lets visitors open. */
+export const SAMPLE_NEXT = 'sample-next';
+
+export async function upsertSampleReport(db: Db, r: Omit<NewReport, '_id'>, now: Date, id: 'sample' | typeof SAMPLE_NEXT = 'sample'): Promise<void> {
+  await reports(db).replaceOne({ _id: id }, { ...r, status: 'running', createdAt: now }, { upsert: true });
+}
+
+/** Swaps a successfully rebuilt sample in; a failed rebuild leaves the current sample untouched. */
+export async function promoteSample(db: Db): Promise<void> {
+  const next = await reports(db).findOne({ _id: SAMPLE_NEXT });
+  if (next?.status === 'done') {
+    const { status, projectName, hasLockfile, deps, skipped, result, createdAt, finishedAt } = next;
+    await reports(db).replaceOne({ _id: 'sample' }, { status, projectName, hasLockfile, deps, skipped, result, createdAt, finishedAt }, { upsert: true });
+  }
+  await reports(db).deleteOne({ _id: SAMPLE_NEXT });
 }
 
 export function getReport(db: Db, id: string): Promise<ReportDoc | null> {

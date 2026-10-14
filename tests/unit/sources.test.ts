@@ -153,6 +153,19 @@ describe('osv', () => {
     }
   });
 
+  it('follows next_page_token for only the queries that have more pages', async () => {
+    const { fetch, calls } = fakeFetch((_u, init) => {
+      const queries = JSON.parse(String(init?.body ?? '{}')).queries as Array<{ page_token?: string }>;
+      if (queries.length === 2) return { body: { results: [{ vulns: [{ id: 'GHSA-aaaa-aaaa-aaaa' }], next_page_token: 'p2' }, { vulns: [{ id: 'GHSA-cccc-cccc-cccc' }] }] } };
+      return { body: { results: [{ vulns: [{ id: 'GHSA-bbbb-bbbb-bbbb' }] }] } };
+    });
+    const r = await queryOsv(fetch, [{ name: 'lodash', version: '4.17.15' }, { name: 'express', version: '5.1.0' }], { backoffMs: 1 });
+    expect(r.get('lodash@4.17.15')).toEqual(['GHSA-aaaa-aaaa-aaaa', 'GHSA-bbbb-bbbb-bbbb']);
+    expect(r.get('express@5.1.0')).toEqual(['GHSA-cccc-cccc-cccc']);
+    expect(calls).toHaveLength(2);
+    expect(JSON.parse(calls[1]?.body ?? '{}').queries).toEqual([{ package: { name: 'lodash', ecosystem: 'npm' }, version: '4.17.15', page_token: 'p2' }]);
+  });
+
   it('rates malicious-package advisories without a severity as critical', () => {
     expect(extractAdvisory({ id: 'MAL-2025-1234', summary: 'Malicious code in evil-pkg' }).severity).toBe('CRITICAL');
     expect(extractAdvisory({ id: 'MAL-2025-1234', database_specific: { severity: 'LOW' } }).severity).toBe('LOW');

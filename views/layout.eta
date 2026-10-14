@@ -3,8 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><%= it.title ? it.title + ' · noticely/deps' : 'noticely/deps · dependency health check for npm projects' %></title>
-<meta name="description" content="Check a package.json for vulnerable, deprecated and abandoned dependencies. Free report with a prioritised upgrade plan.">
+<% const title = it.title ? it.title + ' · noticely/deps' : 'noticely/deps · dependency health check for npm projects' %>
+<% const description = it.description || 'Check a package.json for vulnerable, deprecated and abandoned dependencies. Free report with a prioritised upgrade plan.' %>
+<title><%= title %></title>
+<meta name="description" content="<%= description %>">
+<% if (it.indexable) { %><link rel="canonical" href="<%= it.url %>"><% } else { %><meta name="robots" content="noindex"><% } %>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="noticely/deps">
+<meta property="og:title" content="<%= title %>">
+<meta property="og:description" content="<%= description %>">
+<meta property="og:url" content="<%= it.url %>">
+<meta property="og:image" content="<%= it.publicUrl %>/static/og.png?v=<%= it.ogV %>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="noticely/deps: free package.json dependency health check">
+<meta name="twitter:card" content="summary_large_image">
 <% if (it.refresh) { %><meta http-equiv="refresh" content="<%= it.refresh %>"><% } %>
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">

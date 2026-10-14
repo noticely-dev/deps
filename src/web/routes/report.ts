@@ -37,6 +37,7 @@ export default async function reportRoutes(app: FastifyInstance, deps: AppDeps):
       return reply.type('text/markdown; charset=utf-8').header('Content-Disposition', `attachment; filename="${file}"`).send(toMarkdown(doc, deps.config.PUBLIC_URL));
     }
     const r = toReportView(doc, deps.config.PUBLIC_URL);
-    return reply.page('./report', { title: `${doc.projectName} · dependency report`, turnstile: true, r });
+    const description = `Health score ${r.score}/100 (${r.label}). ${r.depCount} direct ${r.depCount === 1 ? 'dependency' : 'dependencies'} checked, with an upgrade plan.`;
+    return reply.page('./report', { title: `${doc.projectName} · dependency report`, description, turnstile: true, r });
   });
 }

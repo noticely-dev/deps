@@ -60,13 +60,38 @@ describe('POST /check', () => {
     expect((await post({ packageJson: pkg }, '198.51.100.8')).statusCode).toBe(303);
   });
 
-  it('answers 503 when the queue is full', async () => {
+  const counts = async (app: Awaited<ReturnType<typeof testApp>>) =>
+    (await app.db.collection<{ _id: string; count: number }>('ratelimits').find().toArray()).map((d) => [d._id.split(':')[0] === 'global' ? 'global' : 'ip', d.count]);
+  const postTo = (app: Awaited<ReturnType<typeof testApp>>) => {
+    const m = multipart({ 'cf-turnstile-response': 'tok', packageJson: pkg });
+    return app.app.inject({ method: 'POST', url: '/check', payload: m.payload, headers: m.headers });
+  };
+
+  it('answers 503 when the queue is full, without using up a daily check', async () => {
+    const full = await testApp();
+    Object.defineProperty(full.runner, 'hasCapacity', { get: () => false });
+    const res = await postTo(full);
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toContain('did not count towards your daily checks');
+    expect(await counts(full)).toEqual([]);
+    await full.close();
+  });
+
+  it('gives the checks back when the queue fills up between the check and the submit', async () => {
     const full = await testApp();
     (full.runner as unknown as { submit: () => boolean }).submit = () => false;
-    const m = multipart({ 'cf-turnstile-response': 'tok', packageJson: pkg });
-    const res = await full.app.inject({ method: 'POST', url: '/check', payload: m.payload, headers: m.headers });
-    expect(res.statusCode).toBe(503);
+    expect((await postTo(full)).statusCode).toBe(503);
+    expect(await counts(full)).toEqual(expect.arrayContaining([['ip', 0], ['global', 0]]));
     await full.close();
+  });
+
+  it('gives the per-IP check back when the global daily cap is reached', async () => {
+    const capped = await testApp({ config: { GLOBAL_CHECKS_PER_DAY: 0 } });
+    const res = await postTo(capped);
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toContain('Daily capacity reached');
+    expect(await counts(capped)).toEqual(expect.arrayContaining([['ip', 0]]));
+    await capped.close();
   });
 });
 

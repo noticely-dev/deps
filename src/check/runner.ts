@@ -19,7 +19,7 @@ export interface RunnerOptions {
 }
 
 export class CheckRunner {
-  private readonly queue: string[] = [];
+  private readonly queue: Array<{ id: string; onSettled?: () => void | Promise<void> }> = [];
   private running = 0;
   private waiters: Array<() => void> = [];
 
@@ -28,10 +28,15 @@ export class CheckRunner {
   get active(): number { return this.running; }
   get queued(): number { return this.queue.length; }
 
-  submit(reportId: string): boolean {
-    const concurrency = this.o.concurrency ?? 4;
-    if (this.running >= concurrency && this.queue.length >= (this.o.queueLimit ?? 20)) return false;
-    this.queue.push(reportId);
+  /** False when the queue is full, so callers can refuse before charging any quota. */
+  get hasCapacity(): boolean {
+    return this.running < (this.o.concurrency ?? 4) || this.queue.length < (this.o.queueLimit ?? 20);
+  }
+
+  /** Queues a report; `onSettled` runs after it finished, failed or timed out. */
+  submit(reportId: string, onSettled?: () => void | Promise<void>): boolean {
+    if (!this.hasCapacity) return false;
+    this.queue.push({ id: reportId, onSettled });
     this.pump();
     return true;
   }
@@ -44,9 +49,11 @@ export class CheckRunner {
   private pump(): void {
     const concurrency = this.o.concurrency ?? 4;
     while (this.running < concurrency && this.queue.length > 0) {
-      const id = this.queue.shift() as string;
+      const { id, onSettled } = this.queue.shift() as { id: string; onSettled?: () => void | Promise<void> };
       this.running++;
-      void this.run(id).finally(() => {
+      void this.run(id).then(async () => {
+        try { await onSettled?.(); } catch (err) { this.o.log?.(`after check ${id} failed`, err); }
+      }).finally(() => {
         this.running--;
         this.pump();
         if (this.running === 0 && this.queue.length === 0) {
