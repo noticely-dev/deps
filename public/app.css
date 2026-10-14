@@ -75,6 +75,9 @@ textarea { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-s
 textarea::placeholder, input::placeholder { color: var(--mut); opacity: .7; }
 textarea:hover, input[type=email]:hover, input[type=text]:hover { border-color: var(--line2); }
 textarea:focus, input[type=email]:focus, input[type=text]:focus, select:focus { outline: none; border-color: var(--line2); background: var(--panel2); }
+/* Browser autofill keeps our field colours instead of Chrome's tinted background. */
+input:-webkit-autofill, input:-webkit-autofill:hover { -webkit-text-fill-color: var(--fg); caret-color: var(--fg); -webkit-box-shadow: 0 0 0 1000px var(--bg) inset; transition: background-color 600000s 0s; }
+input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px var(--panel2) inset; }
 textarea.dragover { border-color: var(--acc); border-style: dashed; }
 /* package.json editor: a transparent textarea over a highlighted copy, with line numbers (app.js adds .live). Without JS it is a plain textarea. */
 .editor { border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; transition: border-color .12s; }
@@ -204,6 +207,12 @@ textarea.dragover { border-color: var(--acc); border-style: dashed; }
 .contact-form h1, .contact-form p { margin: 0; }
 .contact-form label { display: grid; gap: 6px; font-weight: 600; font-size: 13px; }
 .contact-form label .muted { font-weight: 400; }
+.hint { font-weight: 400; font-size: 12px; color: var(--mut); }
+.field-error { display: block; font-weight: 500; font-size: 12px; color: var(--crit-fg); }
+.notify .field-error { margin-top: 6px; }
+/* Attribute repeated on purpose: it must outrank input[type=email]:focus. */
+input[aria-invalid][aria-invalid], textarea[aria-invalid][aria-invalid] { border-color: var(--crit); }
+.hint:has(+ .field-error:not([hidden])) { display: none; }
 .contact-form > .cf-turnstile { margin-bottom: -14px; } .contact-form .row-actions { margin-top: 0; }
 @media (max-width: 640px) { .contact-form { padding: 20px; } }
 .hp { position: absolute; left: -10000px; }
