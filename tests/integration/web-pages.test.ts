@@ -12,6 +12,8 @@ describe('pages', () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('text/html');
     expect(res.body).toContain('action="/check"');
+    expect(res.body).toContain('<textarea id="packageJson" name="packageJson"');
+    expect(res.body).toContain('data-editor-gutter');
     expect(res.body).toContain('data-sitekey="1x00000000000000000000AA"');
     expect(res.headers['content-security-policy']).toContain("script-src 'self' https://challenges.cloudflare.com");
     expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
@@ -29,8 +31,9 @@ describe('pages', () => {
   it('serves privacy, static files and favicons', async () => {
     const privacy = (await t.app.inject({ url: '/privacy' })).body;
     expect(privacy).toContain('30 days');
-    expect(privacy).toContain('deleted after 7 days unless you click the confirmation link');
+    expect(privacy).toContain('Unconfirmed addresses are deleted after 7 days');
     expect(privacy).not.toContain('stored only after');
+    expect(privacy).toContain('href="/contact?topic=privacy"');
     expect((await t.app.inject({ url: '/static/app.css' })).statusCode).toBe(200);
     expect((await t.app.inject({ url: '/favicon.ico' })).statusCode).toBe(200);
     expect((await t.app.inject({ url: '/favicon.svg' })).statusCode).toBe(200);

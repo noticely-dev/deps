@@ -8,7 +8,7 @@
     </div>
     <div class="row-actions">
       <button type="button" class="b" data-copy="<%= r.shareUrl %>">Copy link</button>
-      <a class="b" href="/r/<%= r.id %>.md">Markdown</a>
+      <a class="b" href="/r/<%= r.id %>.md" download><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Markdown</a>
       <a class="b p" href="/">Check another file</a>
     </div>
   </div>
@@ -19,7 +19,7 @@
     <div>
       <svg class="ring" width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Health score <%= r.score %> out of 100">
         <circle class="track" cx="50" cy="50" r="38" fill="none" stroke-width="10"></circle>
-        <circle class="val <%= r.ringClass %>" cx="50" cy="50" r="38" fill="none" stroke-width="10" stroke-dasharray="<%= r.ring.dash.toFixed(1) %> <%= r.ring.gap.toFixed(1) %>" transform="rotate(-90 50 50)"></circle>
+        <% if (r.score > 0) { %><circle class="val <%= r.ringClass %>" cx="50" cy="50" r="38" fill="none" stroke-width="10" stroke-dasharray="<%= r.ring.dash.toFixed(1) %> <%= r.ring.gap.toFixed(1) %>" transform="rotate(-90 50 50)"></circle><% } %>
         <text x="50" y="59" text-anchor="middle"><%= r.score %></text>
       </svg>
       <div class="center"><b><%= r.label %></b><div class="muted small">Health score / 100</div></div>
@@ -27,10 +27,10 @@
     <div>
       <p class="summary-text"><%= r.summary %></p>
       <div class="kpis">
-        <div class="kpi"><div class="n crit"><%= r.vulnKpi %></div><div class="l">Known vulnerabilities</div></div>
-        <div class="kpi"><div class="n high"><%= r.counts.deprecated %></div><div class="l">Deprecated</div></div>
-        <div class="kpi"><div class="n med"><%= r.counts.maintenance %></div><div class="l">Maintenance risk</div></div>
-        <div class="kpi"><div class="n"><%= r.counts.majorsBehind %></div><div class="l">Major versions behind</div></div>
+        <button type="button" class="kpi" data-kpi="vulnerable" aria-pressed="false"><span class="n crit"><%= r.vulnKpi %></span><span class="l">Known vulnerabilities</span></button>
+        <button type="button" class="kpi" data-kpi="deprecated" aria-pressed="false"><span class="n high"><%= r.counts.deprecated %></span><span class="l">Deprecated</span></button>
+        <button type="button" class="kpi" data-kpi="maintenance" aria-pressed="false"><span class="n med"><%= r.counts.maintenance %></span><span class="l">Maintenance risk</span></button>
+        <button type="button" class="kpi" data-kpi="outdated" aria-pressed="false"><span class="n"><%= r.counts.majorsBehind %></span><span class="l">Major versions behind</span></button>
       </div>
     </div>
   </section>
@@ -46,36 +46,49 @@
         <button type="button" data-filter="vulnerable" aria-pressed="false">Vulnerable</button>
         <button type="button" data-filter="deprecated" aria-pressed="false">Deprecated</button>
         <button type="button" data-filter="maintenance" aria-pressed="false">Maintenance</button>
+        <button type="button" data-filter="outdated" aria-pressed="false">Outdated</button>
       </div>
     </div>
-    <table class="tbl">
-      <thead><tr><th>Package</th><th>In use → Latest</th><th>Last release</th><th>Maint.</th><th>Downloads/wk</th><th>Scorecard</th><th>Risk</th></tr></thead>
+    <table class="tbl deps">
+      <colgroup><col><col class="c-ver"><col class="c-ver"><col class="c-date"><col class="c-maint"><col class="c-dl"><col class="c-score"><col class="c-risk"></colgroup>
+      <thead><tr><th>Package</th><th>In use</th><th>Latest</th><th data-tip="Latest publish on npm"><span>Last release</span></th><th data-tip="npm maintainers"><span>Maint.</span></th><th data-tip="npm downloads in the last week"><span>Downloads/wk</span></th><th data-tip="OpenSSF Scorecard, 0–10" data-tip-end><span>Scorecard</span></th><th>Risk</th></tr></thead>
       <tbody>
       <% r.rows.forEach(function (p) { %>
-        <tr class="row" data-scope="<%= p.scope %>" data-kinds="<%= p.kinds %>" <% if (p.expandable) { %>data-expand="d<%= p.idx %>"<% } %> <% if (p.scope === 'dev') { %>hidden<% } %>>
-          <td><div class="pk"><%= p.name %></div><div class="sub"><%= p.reason %><% if (p.worstCase) { %> · <%= p.worstCase %><% } %></div></td>
-          <td class="mono"><%= p.version %> → <%= p.latest %></td>
-          <td><%= p.lastRelease %></td>
-          <td><%= p.maintainers %></td>
-          <td><%= p.downloads %></td>
-          <td><% if (p.bar) { %><span class="<%= p.bar %>"><span></span></span> <% } %><%= p.scorecard %></td>
-          <td><span class="sev <%= p.risk %>"><%= p.riskLabel %></span></td>
+        <tr class="row" data-scope="<%= p.scope %>" data-kinds="<%= p.kinds %>" <% if (p.expandable) { %>data-expand="d<%= p.idx %>" aria-expanded="false"<% } %> <% if (p.scope === 'dev') { %>hidden<% } %>>
+          <td><div class="pk"><%= p.name %><% if (p.expandable) { %><svg class="chev" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><% } %></div><div class="sub"><%= p.reason %><% if (p.worstCase) { %> · <%= p.worstCase %><% } %></div></td>
+          <td class="mono nowrap" data-label="In use"><%= p.version %></td>
+          <td class="mono nowrap<%= p.latest === p.version ? ' muted' : '' %>" data-label="Latest"><%= p.latest %></td>
+          <td data-label="Last release"><%= p.lastRelease %></td>
+          <td data-label="Maintainers"><%= p.maintainers %></td>
+          <td data-label="Downloads/wk"><%= p.downloads %></td>
+          <td data-label="Scorecard"><% if (p.bar) { %><span class="<%= p.bar %>"><span></span></span> <% } %><%= p.scorecard %></td>
+          <td class="risk-cell"><span class="sev <%= p.risk %>"><%= p.riskLabel %></span></td>
         </tr>
         <% if (p.expandable) { %>
         <tr class="detail" id="d<%= p.idx %>" hidden>
-          <td colspan="7">
-            <% if (p.deprecated) { %><p><b>Deprecation notice:</b> <%= p.deprecated %></p><% } %>
-            <% p.vulns.forEach(function (v) { %>
-              <div><a href="<%= v.url %>" rel="nofollow noopener noreferrer" class="mono"><%= v.id %></a> · <span class="sev <%= v.risk %>"><%= v.riskLabel %></span> · <%= v.summary %><% if (v.fixedIn) { %> · fixed in <span class="mono"><%= v.fixedIn %></span><% } %></div>
-            <% }) %>
+          <td colspan="8">
+            <div class="detail-box">
+            <% if (p.deprecated) { %>
+              <div class="detail-sec"><div class="detail-h">Deprecation notice from the authors</div><p class="dep-note"><%= p.deprecated %></p></div>
+            <% } %>
+            <% if (p.vulns.length) { %>
+              <div class="detail-sec"><div class="detail-h">Known vulnerabilities (<%= p.vulns.length %>)</div>
+                <ul class="advisories">
+                <% p.vulns.forEach(function (v) { %>
+                  <li><span class="sev <%= v.risk %>"><%= v.riskLabel %></span><span class="adv-sum"><%= v.summary %></span><a href="<%= v.url %>" target="_blank" rel="nofollow noopener noreferrer" class="mono adv-id"><%= v.id %></a><span class="adv-fix"><% if (v.fixedIn) { %>Fixed in <span class="mono"><%= v.fixedIn %></span><% } else { %>No fix yet<% } %></span></li>
+                <% }) %>
+                </ul>
+              </div>
+            <% } %>
+            </div>
           </td>
         </tr>
         <% } %>
       <% }) %>
-      <% if (r.rows.length === 0) { %><tr><td colspan="7" class="muted">No dependencies to check.</td></tr><% } %>
+      <% if (r.rows.length === 0) { %><tr><td colspan="8" class="muted">No dependencies to check.</td></tr><% } %>
       </tbody>
     </table>
-    <nav class="pager" data-pager="rows" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
+    <nav class="pager" data-pager="rows" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page" data-tip="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page" data-tip="Next page" data-tip-end><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
     <% if (r.skipped.length) { %>
       <div class="deps-tools muted small">Not checked: <% r.skipped.forEach(function (s, i) { %><%= i ? ', ' : '' %><span class="mono"><%= s.name %></span> (<%= s.reason %>)<% }) %></div>
     <% } %>
@@ -103,7 +116,7 @@
       <% r.plan.forEach(function (s) { %>
         <div class="step" data-step><div class="num"><%= s.n %></div><div><b><%= s.name %>:</b> <%= s.action %><div class="muted small"><%= s.effort %></div></div></div>
       <% }) %>
-      <nav class="pager" data-pager="plan" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
+      <nav class="pager" data-pager="plan" hidden><span class="muted small" data-page-info></span><span class="pager-btns"><button type="button" class="b icon" data-page="prev" aria-label="Previous page" data-tip="Previous page"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" class="b icon" data-page="next" aria-label="Next page" data-tip="Next page" data-tip-end><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></nav>
     </div>
   </aside>
 </div>

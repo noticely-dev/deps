@@ -1,14 +1,20 @@
 <% layout('./layout') %>
 <form class="panel contact-form" method="post" action="/contact">
+  <% if (it.privacy) { %>
+  <h1>Privacy request</h1>
+  <p class="muted">Ask what is stored about you, or have it deleted. Include the email address or report link it concerns. You'll get a reply by email within 30 days, usually much sooner.</p>
+  <% } else { %>
   <h1>Get a fixed-price quote</h1>
   <p class="muted">noticely is built by an independent backend engineer (Node.js, MongoDB, Docker, upgrades &amp; migrations). Describe what you need; you'll get a reply by email with a fixed price, usually within two working days.</p>
+  <% } %>
   <% if (it.error) { %><div class="banner"><%= it.error %></div><% } %>
   <label>Name <input type="text" name="name" required maxlength="100" value="<%= it.values.name || '' %>" autocomplete="name"></label>
   <label>Email <input type="email" name="email" required maxlength="254" value="<%= it.values.email || '' %>" autocomplete="email"></label>
-  <label>Company <span class="muted">(optional)</span> <input type="text" name="company" maxlength="100" value="<%= it.values.company || '' %>" autocomplete="organization"></label>
-  <label>What should be done? <textarea name="message" rows="7" required minlength="10" maxlength="4000"><%= it.values.message || '' %></textarea></label>
+  <% if (!it.privacy) { %><label>Company <span class="muted">(optional)</span> <input type="text" name="company" maxlength="100" value="<%= it.values.company || '' %>" autocomplete="organization"></label><% } %>
+  <label><%= it.privacy ? 'Your request' : 'What should be done?' %> <textarea name="message" rows="7" required minlength="10" maxlength="4000"><%= it.values.message || '' %></textarea></label>
   <% if (it.r) { %><p class="muted small">Report attached: <a href="/r/<%= it.r %>">/r/<%= it.r %></a></p><% } %>
   <input type="hidden" name="r" value="<%= it.r %>">
+  <input type="hidden" name="topic" value="<%= it.privacy ? 'privacy' : 'quote' %>">
   <input type="hidden" name="t" value="<%= it.t %>">
   <label class="hp" aria-hidden="true">Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
   <div class="cf-turnstile" data-sitekey="<%= it.siteKey %>" data-appearance="interaction-only"></div>

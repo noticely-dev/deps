@@ -4,8 +4,16 @@
   <p class="lede">Paste or upload your <code>package.json</code> and see which dependencies are <b>vulnerable</b>, <b>deprecated</b>, <b>abandoned</b> or far behind, with a prioritised upgrade plan and effort estimates.</p>
 </section>
 <form class="panel check-form" method="post" action="/check" enctype="multipart/form-data" data-dropzone>
-  <label for="packageJson" class="label">package.json</label>
-  <textarea id="packageJson" name="packageJson" rows="12" spellcheck="false" placeholder='{ "dependencies": { "express": "^5.1.0" } }'></textarea>
+  <div class="editor" data-editor>
+    <div class="editor-head"><label for="packageJson">package.json</label><span class="editor-stats" data-editor-stats></span></div>
+    <div class="editor-body">
+      <pre class="editor-gutter" aria-hidden="true" data-editor-gutter></pre>
+      <div class="editor-stack">
+        <pre class="editor-hl" aria-hidden="true"><code data-editor-hl></code></pre>
+        <textarea id="packageJson" name="packageJson" rows="14" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder='{&#10;  "name": "my-app",&#10;  "dependencies": {&#10;    "express": "^5.1.0"&#10;  }&#10;}'></textarea>
+      </div>
+    </div>
+  </div>
   <div class="files">
     <div class="file">
       <span class="file-label">…or upload <code>package.json</code></span>

@@ -6,6 +6,14 @@
     if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
   } catch { /* storage blocked */ }
 
+  // The theme button names the theme it switches to.
+  const themeLabel = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    const label = `Switch to ${dark ? 'light' : 'dark'} theme`;
+    document.querySelectorAll('[data-theme-toggle]').forEach((b) => { b.setAttribute('aria-label', label); b.setAttribute('data-tip', label); });
+  };
+  themeLabel();
+
   document.addEventListener('click', (e) => {
     const t = e.target instanceof Element ? e.target : null;
     if (!t) return;
@@ -13,6 +21,7 @@
       const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
       root.dataset.theme = dark ? 'light' : 'dark';
       try { localStorage.setItem('theme', root.dataset.theme); } catch { /* ignore */ }
+      themeLabel();
     }
     const copy = t.closest('[data-copy]');
     if (copy) {
@@ -20,9 +29,24 @@
       copy.textContent = 'Copied';
     }
     const row = t.closest('tr[data-expand]');
-    if (row) {
+    if (row && !t.closest('a')) {
       const detail = document.getElementById(row.getAttribute('data-expand'));
-      if (detail) detail.hidden = !detail.hidden;
+      if (detail) {
+        detail.hidden = !detail.hidden;
+        row.setAttribute('aria-expanded', String(!detail.hidden));
+      }
+    }
+    // KPI cards are shortcuts to the table filters; clicking the active one shows everything again.
+    const kpi = t.closest('[data-kpi]');
+    if (kpi) {
+      const kind = kpi.getAttribute('aria-pressed') === 'true' ? 'all' : kpi.getAttribute('data-kpi');
+      const target = document.querySelector(`[data-filter="${kind}"]`);
+      if (target) {
+        document.querySelectorAll('[data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === target)));
+        page.rows = 0;
+        applyRows();
+        if (kind !== 'all') document.querySelector('.deps-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
     const toggle = t.closest('[data-tab], [data-filter]');
     if (toggle) {
@@ -67,6 +91,7 @@
   function applyRows() {
     const scope = document.querySelector('[data-tab][aria-pressed="true"]')?.getAttribute('data-tab') || 'prod';
     const kind = document.querySelector('[data-filter][aria-pressed="true"]')?.getAttribute('data-filter') || 'all';
+    document.querySelectorAll('[data-kpi]').forEach((k) => k.setAttribute('aria-pressed', String(k.getAttribute('data-kpi') === kind)));
     const rows = [...document.querySelectorAll('tr.row')];
     const matching = rows.filter((r) => r.getAttribute('data-scope') === scope
       && (kind === 'all' || (r.getAttribute('data-kinds') || '').split(' ').includes(kind)));
@@ -75,7 +100,7 @@
       const hide = !shown.has(r);
       r.hidden = hide;
       const d = document.getElementById(r.getAttribute('data-expand') || '');
-      if (d && hide) d.hidden = true;
+      if (d && hide) { d.hidden = true; r.setAttribute('aria-expanded', 'false'); }
     });
   }
 
@@ -116,16 +141,54 @@
     input.addEventListener('change', () => showFile(input));
   });
 
-  // Drag & drop a file onto the textarea.
-  const area = document.querySelector('[data-dropzone] textarea');
-  if (area) {
-    area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('dragover'); });
-    area.addEventListener('dragleave', () => area.classList.remove('dragover'));
-    area.addEventListener('drop', async (e) => {
+  // package.json editor: line numbers, JSON colours and a size line, drawn behind the real textarea.
+  const editor = document.querySelector('[data-editor]');
+  const area = editor?.querySelector('textarea');
+  if (editor && area) {
+    const hl = editor.querySelector('[data-editor-hl]');
+    const gutter = editor.querySelector('[data-editor-gutter]');
+    const stats = editor.querySelector('[data-editor-stats]');
+    const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+    const TOKEN = /("(?:[^"\\\n]|\\.)*"?)(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\btrue\b|\bfalse\b|\bnull\b)|([{}[\],:])/g;
+    const highlight = (text) => esc(text).replace(TOKEN, (m, str, colon, lit, punct) => {
+      if (str) return `<span class="${colon ? 'k' : 's'}">${str}</span>${colon ? colon.replace(':', '<span class="p">:</span>') : ''}`;
+      if (lit) return `<span class="l">${lit}</span>`;
+      return `<span class="p">${punct}</span>`;
+    });
+    const size = (n) => (n < 1024 ? `${n} bytes` : `${(n / 1024).toFixed(2)} KB`);
+    const render = () => {
+      const text = area.value;
+      editor.classList.toggle('empty', !text);
+      const rows = text.split('\n').length;
+      const lines = text ? rows - (text.endsWith('\n') ? 1 : 0) : 0;
+      // Very large pastes skip the colours so typing stays fast.
+      hl.innerHTML = (text.length > 100_000 ? esc(text) : highlight(text)) + '\n';
+      gutter.textContent = Array.from({ length: rows }, (_, i) => i + 1).join('\n');
+      gutter.style.setProperty('--digits', String(Math.max(2, String(rows).length)));
+      // Grow with the content up to the CSS max-height, then scroll.
+      area.style.height = 'auto';
+      area.style.height = `${area.scrollHeight + area.offsetHeight - area.clientHeight}px`;
+      stats.textContent = lines ? `${lines} ${lines === 1 ? 'line' : 'lines'} · ${size(new Blob([text]).size)}` : '';
+      sync();
+    };
+    const sync = () => {
+      hl.parentElement.scrollTop = area.scrollTop;
+      hl.parentElement.scrollLeft = area.scrollLeft;
+      gutter.scrollTop = area.scrollTop;
+    };
+    editor.classList.add('live');
+    area.addEventListener('input', render);
+    area.addEventListener('scroll', sync);
+    render();
+
+    // Drag & drop a file onto the editor.
+    editor.addEventListener('dragover', (e) => { e.preventDefault(); editor.classList.add('dragover'); });
+    editor.addEventListener('dragleave', () => editor.classList.remove('dragover'));
+    editor.addEventListener('drop', async (e) => {
       e.preventDefault();
-      area.classList.remove('dragover');
+      editor.classList.remove('dragover');
       const file = e.dataTransfer?.files?.[0];
-      if (file && file.size <= 256 * 1024) area.value = await file.text();
+      if (file && file.size <= 256 * 1024) { area.value = await file.text(); render(); }
     });
   }
 })();

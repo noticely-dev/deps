@@ -1,14 +1,35 @@
 <% layout('./layout') %>
-<article class="panel prose">
-<h1>Privacy</h1>
-<ul>
-<li><b>What is stored:</b> only the dependency names, version ranges and resolved versions from your file, and the resulting report. Never the whole file, scripts or other fields.</li>
-<li><b>How long:</b> reports are deleted automatically after 30 days.</li>
-<li><b>Who sees it:</b> anyone with the report link (it contains a long random id). Package names are sent to the public npm registry, OSV.dev and deps.dev to look them up.</li>
-<li><b>Your IP address:</b> stored only as a keyed hash, for the daily check limit, and deleted after 48 hours.</li>
-<li><b>Emails:</b> if you ask to be notified, your address is stored when you ask and deleted after 7 days unless you click the confirmation link. Once confirmed, it is kept only for that purpose until you unsubscribe (unsubscribed addresses are deleted after 30 days). Every email has an unsubscribe link.</li>
-<li><b>Contact form:</b> messages are kept for up to 180 days.</li>
-<li><b>Bot protection:</b> Cloudflare Turnstile runs on the forms.</li>
-</ul>
-<p>To have data deleted earlier, use the <a href="/contact">contact form</a>.</p>
+<article class="panel prose legal">
+  <h1>Privacy</h1>
+  <p class="muted">noticely/deps keeps as little as it can, for as short as it can. This page lists everything that is stored, why, and for how long.</p>
+
+  <h2>Reports</h2>
+  <dl class="facts">
+    <dt>What is stored</dt><dd>Only the dependency names, version ranges and resolved versions from your file, and the resulting report. Never the whole file, scripts or other fields.</dd>
+    <dt>Who can see it</dt><dd>Anyone with the report link, which contains a long random id. Package names are sent to the public npm registry, OSV.dev and deps.dev to look them up.</dd>
+    <dt>How long</dt><dd>Deleted automatically after 30 days.</dd>
+  </dl>
+
+  <h2>Email lists</h2>
+  <dl class="facts">
+    <dt>What is stored</dt><dd>Your email address and the list you joined (PDF report or check packs).</dd>
+    <dt>Confirmation</dt><dd>Unconfirmed addresses are deleted after 7 days. Once you confirm, the address is used only for that one announcement.</dd>
+    <dt>Unsubscribing</dt><dd>Every email has an unsubscribe link. Unsubscribed addresses are deleted after 30 days.</dd>
+  </dl>
+
+  <h2>Contact form</h2>
+  <dl class="facts">
+    <dt>What is stored</dt><dd>Your name, email, optional company and message, used only to reply to you.</dd>
+    <dt>How long</dt><dd>Up to 180 days.</dd>
+  </dl>
+
+  <h2>Abuse protection</h2>
+  <dl class="facts">
+    <dt>IP address</dt><dd>Stored only as a keyed hash to enforce the daily check limit, and deleted after 48 hours.</dd>
+    <dt>Bot check</dt><dd>Cloudflare Turnstile runs on the forms to block bots. See Cloudflare's <a href="https://www.cloudflare.com/turnstile-privacy-policy/" target="_blank" rel="noopener">Turnstile privacy addendum</a>.</dd>
+  </dl>
+
+  <h2>Your data, your call</h2>
+  <p>To ask what is stored about you or to have it deleted earlier, send a <a href="/contact?topic=privacy">privacy request</a>. It is answered within 30 days, usually much sooner.</p>
+  <p class="muted small">Last updated 13 October 2026.</p>
 </article>

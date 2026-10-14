@@ -31,7 +31,11 @@ export default async function reportRoutes(app: FastifyInstance, deps: AppDeps):
         id: doc._id, projectName: doc.projectName, createdAt: doc.createdAt, hasLockfile: doc.hasLockfile, skipped: doc.skipped, ...doc.result,
       });
     }
-    if (format === 'md') return reply.type('text/markdown; charset=utf-8').send(toMarkdown(doc, deps.config.PUBLIC_URL));
+    if (format === 'md') {
+      // Only safe characters in the filename: the project name comes from the visitor's package.json.
+      const file = `${doc.projectName.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^[-.]+|-+$/g, '').slice(0, 60) || 'project'}-dependency-report.md`;
+      return reply.type('text/markdown; charset=utf-8').header('Content-Disposition', `attachment; filename="${file}"`).send(toMarkdown(doc, deps.config.PUBLIC_URL));
+    }
     const r = toReportView(doc, deps.config.PUBLIC_URL);
     return reply.page('./report', { title: `${doc.projectName} · dependency report`, turnstile: true, r });
   });
