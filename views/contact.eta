@@ -10,8 +10,8 @@
   <% if (it.error) { %><div class="banner"><%= it.error %></div><% } %>
   <label>Name <input type="text" name="name" required maxlength="100" value="<%= it.values.name || '' %>" autocomplete="name"></label>
   <label>Email <input type="email" name="email" required maxlength="254" value="<%= it.values.email || '' %>" autocomplete="email"></label>
-  <% if (!it.privacy) { %><label>Company <span class="muted">(optional)</span> <input type="text" name="company" maxlength="100" value="<%= it.values.company || '' %>" autocomplete="organization"></label><% } %>
-  <label><%= it.privacy ? 'Your request' : 'What should be done?' %> <textarea name="message" rows="7" required minlength="10" maxlength="4000"><%= it.values.message || '' %></textarea></label>
+  <% if (!it.privacy) { %><label><span>Company <span class="muted">(optional)</span></span> <input type="text" name="company" maxlength="100" value="<%= it.values.company || '' %>" autocomplete="organization"></label><% } %>
+  <label><%= it.privacy ? 'Your request' : 'What should be done?' %> <textarea name="message" rows="7" required minlength="10" maxlength="4000" aria-describedby="message-hint"><%= it.values.message || '' %></textarea><span class="hint" id="message-hint">At least 10 characters.</span></label>
   <% if (it.r) { %><p class="muted small">Report attached: <a href="/r/<%= it.r %>">/r/<%= it.r %></a></p><% } %>
   <input type="hidden" name="r" value="<%= it.r %>">
   <input type="hidden" name="topic" value="<%= it.privacy ? 'privacy' : 'quote' %>">

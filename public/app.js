@@ -141,6 +141,54 @@
     input.addEventListener('change', () => showFile(input));
   });
 
+  // Form errors: show our own message under the field instead of the browser's tooltip.
+  // Without JS the browser's built-in validation still applies.
+  const fieldError = (el) => {
+    if (el.validity.valueMissing) return el.type === 'email' ? 'Enter your email address.' : 'Please fill this in.';
+    if (el.validity.typeMismatch && el.type === 'email') return 'Enter a valid email address, like name@example.com.';
+    if (el.validity.tooShort) return `Please write at least ${el.minLength} characters (${el.value.trim().length} so far).`;
+    return el.validationMessage;
+  };
+  const errorSlot = (el) => {
+    const id = `${el.name}-error`;
+    let slot = el.form?.querySelector(`#${CSS.escape(id)}`);
+    if (!slot) {
+      slot = document.createElement('span');
+      slot.className = 'field-error';
+      slot.id = id;
+      slot.setAttribute('role', 'alert');
+      const hint = el.nextElementSibling?.classList.contains('hint') ? el.nextElementSibling : null;
+      (el.closest('.in') ?? hint ?? el).insertAdjacentElement('afterend', slot);
+    }
+    return slot;
+  };
+  const showError = (el, msg) => {
+    const slot = errorSlot(el);
+    slot.textContent = msg;
+    slot.hidden = !msg;
+    if (msg) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+    const ids = new Set((el.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+    if (msg) ids.add(slot.id); else ids.delete(slot.id);
+    if (ids.size) el.setAttribute('aria-describedby', [...ids].join(' ')); else el.removeAttribute('aria-describedby');
+  };
+  let focusedInvalid = false;
+  document.addEventListener('invalid', (e) => {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+    e.preventDefault();
+    showError(el, fieldError(el));
+    // The first invalid field of this submit attempt gets focus.
+    if (!focusedInvalid) {
+      focusedInvalid = true;
+      el.focus();
+      queueMicrotask(() => { focusedInvalid = false; });
+    }
+  }, true);
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if ((el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && el.hasAttribute('aria-invalid') && el.checkValidity()) showError(el, '');
+  });
+
   // package.json editor: line numbers, JSON colours and a size line, drawn behind the real textarea.
   const editor = document.querySelector('[data-editor]');
   const area = editor?.querySelector('textarea');

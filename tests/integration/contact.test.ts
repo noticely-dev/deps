@@ -23,6 +23,8 @@ describe('contact', () => {
     const res = await t.app.inject({ url: '/contact?r=AAAAAAAAAAAAAAAAAAAAAA' });
     expect(res.body).toContain('name="r" value="AAAAAAAAAAAAAAAAAAAAAA"');
     expect(res.body).toContain('name="website"');
+    expect(res.body).toContain('aria-describedby="message-hint"');
+    expect(res.body).toContain('<span class="hint" id="message-hint">At least 10 characters.</span>');
     expect(res.body).not.toMatch(OWNER_NAME_RE);
   });
 
