@@ -47,6 +47,36 @@ describe('pages', () => {
     expect(body).toContain('data-appearance="interaction-only"');
   });
 
+  it('lets search engines index the public pages, with canonical links and a share preview', async () => {
+    for (const [url, canonical] of [['/', '/'], ['/methodology', '/methodology'], ['/contact?topic=privacy', '/contact']]) {
+      const res = await t.app.inject({ url });
+      expect(res.headers['x-robots-tag']).toBeUndefined();
+      expect(res.body).toContain(`<link rel="canonical" href="http://localhost:8080${canonical}">`);
+      expect(res.body).not.toContain('name="robots"');
+    }
+    const home = (await t.app.inject({ url: '/' })).body;
+    expect(home).toMatch(/<meta property="og:image" content="http:\/\/localhost:8080\/static\/og\.png\?v=[0-9a-f]{10}">/);
+    expect(home).toContain('<meta name="twitter:card" content="summary_large_image">');
+    expect(home).toContain('<meta property="og:title" content="noticely/deps · dependency health check for npm projects">');
+    expect((await t.app.inject({ url: '/static/og.png' })).statusCode).toBe(200);
+  });
+
+  it('serves robots.txt and a sitemap of the public pages', async () => {
+    const robots = await t.app.inject({ url: '/robots.txt' });
+    expect(robots.body).toContain('Sitemap: http://localhost:8080/sitemap.xml');
+    expect(robots.body).not.toContain('Disallow: /r/');
+    const sitemap = await t.app.inject({ url: '/sitemap.xml' });
+    expect(sitemap.headers['content-type']).toContain('application/xml');
+    for (const p of ['/', '/methodology', '/r/sample', '/privacy', '/contact']) expect(sitemap.body).toContain(`<loc>http://localhost:8080${p}</loc>`);
+    expect(sitemap.body).not.toMatch(/\/r\/[0-9A-Za-z]{22}/);
+  });
+
+  it('keeps 404s and notices out of search results', async () => {
+    const res = await t.app.inject({ url: '/nope' });
+    expect(res.headers['x-robots-tag']).toBe('noindex');
+    expect(res.body).toContain('<meta name="robots" content="noindex">');
+  });
+
   it('renders a friendly 404', async () => {
     const res = await t.app.inject({ url: '/nope' });
     expect(res.statusCode).toBe(404);

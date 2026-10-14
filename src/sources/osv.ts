@@ -5,23 +5,37 @@ const rec = (v: unknown): Record<string, unknown> => (typeof v === 'object' && v
 const SEVERITIES = new Set(['CRITICAL', 'HIGH', 'MODERATE', 'LOW']);
 export const OSV_ID_RE = /^[A-Za-z0-9._:-]{1,100}$/;
 
+type BatchResult = { vulns?: Array<{ id?: unknown }>; next_page_token?: unknown };
+const MAX_PAGES = 20;
+
 export async function queryOsv(fetchFn: FetchFn, items: Array<{ name: string; version: string }>, o: CallOptions = {}) {
   const out = new Map<string, string[]>();
   for (let i = 0; i < items.length; i += 1000) {
     const chunk = items.slice(i, i + 1000);
-    const body = await getJson<{ results?: Array<{ vulns?: Array<{ id?: unknown }> }> }>(fetchFn, 'https://api.osv.dev/v1/querybatch', {
-      ...o, source: 'osv',
-      body: { queries: chunk.map((it) => ({ package: { name: it.name, ecosystem: 'npm' }, version: it.version })) },
-    });
-    // One result per query, in order. Anything else must not be read as "no vulnerabilities" (or cached).
-    const results = body?.results;
-    if (!Array.isArray(results) || results.length !== chunk.length) {
-      throw new UpstreamError('osv', 200, 'osv: querybatch returned an unexpected number of results');
+    // OSV pages per query: a result with next_page_token has more vulnerabilities, fetched by repeating
+    // just those queries with page_token until no token is left.
+    let pending = chunk.map((it) => ({ it, token: undefined as string | undefined }));
+    for (let page = 0; pending.length > 0; page++) {
+      if (page === MAX_PAGES) throw new UpstreamError('osv', 200, 'osv: querybatch kept paging');
+      const body = await getJson<{ results?: BatchResult[] }>(fetchFn, 'https://api.osv.dev/v1/querybatch', {
+        ...o, source: 'osv',
+        body: { queries: pending.map(({ it, token }) => ({ package: { name: it.name, ecosystem: 'npm' }, version: it.version, ...(token ? { page_token: token } : {}) })) },
+      });
+      // One result per query, in order. Anything else must not be read as "no vulnerabilities" (or cached).
+      const results = body?.results;
+      if (!Array.isArray(results) || results.length !== pending.length) {
+        throw new UpstreamError('osv', 200, 'osv: querybatch returned an unexpected number of results');
+      }
+      const next: typeof pending = [];
+      pending.forEach(({ it }, idx) => {
+        const key = `${it.name}@${it.version}`;
+        const ids = (results[idx]?.vulns ?? []).map((v) => v.id).filter((id): id is string => typeof id === 'string' && OSV_ID_RE.test(id));
+        out.set(key, [...new Set([...(out.get(key) ?? []), ...ids])]);
+        const token = results[idx]?.next_page_token;
+        if (typeof token === 'string' && token) next.push({ it, token });
+      });
+      pending = next;
     }
-    chunk.forEach((it, idx) => {
-      const ids = (results[idx]?.vulns ?? []).map((v) => v.id).filter((id): id is string => typeof id === 'string' && OSV_ID_RE.test(id));
-      out.set(`${it.name}@${it.version}`, ids);
-    });
   }
   return out;
 }

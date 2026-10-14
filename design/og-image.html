@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Source of public/og.png (1200x630 share preview). Regenerate with `make og-image`. -->
+<html lang="en"><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1200px; height: 630px; background: #0b0d12; color: #e6e8ee; font-family: "Inter", "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  .frame { position: absolute; inset: 0; padding: 64px 72px; display: grid; grid-template-columns: 1fr 380px; gap: 56px; align-items: center;
+    background: radial-gradient(circle at 85% 20%, rgba(59,130,246,.16), transparent 45%); }
+  .brand { display: flex; align-items: center; gap: 14px; font-weight: 800; font-size: 30px; letter-spacing: -.02em; }
+  .brand b { color: #3b82f6; } .brand img { width: 52px; height: 52px; }
+  h1 { margin-top: 44px; font-size: 64px; line-height: 1.08; letter-spacing: -.03em; font-weight: 800; }
+  p { margin-top: 26px; font-size: 27px; line-height: 1.4; color: #8b93a7; } p b { color: #e6e8ee; font-weight: 600; }
+  .url { margin-top: 40px; font: 600 24px ui-monospace, "JetBrains Mono", Menlo, monospace; color: #93b8fb; }
+  .card { background: #12151c; border: 1px solid #232838; border-radius: 22px; padding: 30px; }
+  .ring { display: grid; place-items: center; }
+  .ring svg { width: 170px; height: 170px; }
+  .score-l { margin-top: 10px; text-align: center; font-weight: 700; font-size: 22px; }
+  .score-s { text-align: center; color: #8b93a7; font-size: 16px; margin-top: 2px; }
+  .rows { margin-top: 24px; display: grid; gap: 10px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #171b24; border-radius: 10px; font: 600 18px ui-monospace, "JetBrains Mono", Menlo, monospace; }
+  .sev { font: 600 15px "Inter", system-ui, sans-serif; padding: 4px 11px; border-radius: 999px; }
+  .crit { background: rgba(229,72,77,.15); color: #ff9592; } .high { background: rgba(247,107,21,.14); color: #ffa057; } .med { background: rgba(226,163,54,.14); color: #f1c56b; }
+</style></head><body><div class="frame">
+  <div>
+    <div class="brand"><img src="../public/brand/noticely-mark.svg" alt=""><span>noticely<b>/deps</b></span></div>
+    <h1>Is your Node.js project aging badly?</h1>
+    <p>Free <b>package.json</b> health check: vulnerable, deprecated and abandoned dependencies, with an upgrade plan.</p>
+    <div class="url">deps.noticely.dev</div>
+  </div>
+  <div class="card">
+    <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#232838" stroke-width="9"/>
+      <circle cx="50" cy="50" r="42" fill="none" stroke="#e2a336" stroke-width="9" stroke-linecap="round" stroke-dasharray="164 264" transform="rotate(-90 50 50)"/>
+      <text x="50" y="58" text-anchor="middle" font-size="26" font-weight="800" fill="#e6e8ee" font-family="Inter, system-ui, sans-serif">62</text></svg></div>
+    <div class="score-l">Needs attention</div><div class="score-s">Health score / 100</div>
+    <div class="rows">
+      <div class="row">request <span class="sev high">High</span></div>
+      <div class="row">lodash <span class="sev crit">Critical</span></div>
+      <div class="row">moment <span class="sev med">Medium</span></div>
+    </div>
+  </div>
+</div></body></html>

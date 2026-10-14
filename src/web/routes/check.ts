@@ -4,7 +4,7 @@ import { newReportId, REPORT_ID_RE } from '../../store/ids.js';
 import { createReport, getReport, isStaleRunning, setReportFailed, type ReportDoc } from '../../store/reports.js';
 import type { AppDeps } from '../app.js';
 import { clientIp } from '../client-ip.js';
-import { consume, consumeGlobal } from '../limits.js';
+import { consume, consumeGlobal, refund, refundGlobal } from '../limits.js';
 
 type CheckBody = Partial<Record<'packageJson' | 'packageJsonFile' | 'lockfile' | 'cf-turnstile-response', string | Buffer>>;
 
@@ -33,10 +33,14 @@ export default async function checkRoutes(app: FastifyInstance, deps: AppDeps): 
     if (!pkgText) throw new InputError('Paste your package.json or choose the file to upload.');
     const parsed = parseInput(pkgText, asText(body.lockfile));
 
+    // Refuse while the queue is full before charging anything, and give back what was charged if a later step refuses.
+    const busy = (reply: FastifyReply) => reply.page('./notice', { title: 'Busy', heading: 'Too many checks right now', message: 'Please try again in a minute. This attempt did not count towards your daily checks.', back: true }, 503);
+    if (!deps.runner.hasCapacity) return busy(reply);
     if (!(await consume(deps, 'check', ip, deps.config.CHECKS_PER_DAY))) {
       return reply.page('./limit', { title: 'Daily limit reached', turnstile: true, perDay: deps.config.CHECKS_PER_DAY }, 429);
     }
     if (!(await consumeGlobal(deps))) {
+      await refund(deps, 'check', ip);
       return reply.page('./notice', { title: 'Busy', heading: 'Daily capacity reached', message: 'The free service has reached its daily capacity. Please try again tomorrow.', back: true }, 503);
     }
 
@@ -45,7 +49,8 @@ export default async function checkRoutes(app: FastifyInstance, deps: AppDeps): 
       (deps.clock ?? (() => new Date()))());
     if (!deps.runner.submit(id)) {
       await setReportFailed(deps.db, id, 'busy');
-      return reply.page('./notice', { title: 'Busy', heading: 'Too many checks right now', message: 'Please try again in a minute.', back: true }, 503);
+      await Promise.all([refund(deps, 'check', ip), refundGlobal(deps)]);
+      return busy(reply);
     }
     return reply.redirect(`/r/${id}`, 303);
   });

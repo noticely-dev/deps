@@ -74,6 +74,25 @@ describe('GET /r/:id', () => {
     expect(body).toMatch(/href="https:\/\/osv\.dev\/vulnerability\/GHSA-35jh-r3h4-6jhm" target="_blank" rel="nofollow noopener noreferrer"/);
   });
 
+  it('keeps reports and their exports out of search results, but not the sample', async () => {
+    const id = await doneReport(deps);
+    for (const url of [`/r/${id}`, `/r/${id}.md`, `/r/${id}.json`, `/r/${id}/status`]) {
+      expect((await t.app.inject({ url })).headers['x-robots-tag']).toBe('noindex');
+    }
+    const page = (await t.app.inject({ url: `/r/${id}` })).body;
+    expect(page).toContain('<meta name="robots" content="noindex">');
+    expect(page).not.toContain('rel="canonical"');
+    expect(page).toContain('<meta property="og:title" content="acme-shop-api · dependency report · noticely/deps">');
+    expect(page).toMatch(/<meta property="og:description" content="Health score \d+\/100 \([A-Za-z ]+\)\. 3 direct dependencies checked, with an upgrade plan\.">/);
+
+    await t.db.collection('reports').deleteOne({ _id: 'sample' } as never);
+    await createReport(t.db, { _id: 'sample', projectName: 'acme-shop-api', hasLockfile: false, deps, skipped: [] }, now);
+    await setReportResult(t.db, 'sample', await analyzeDeps({ deps }, sources, {}, now));
+    const sample = await t.app.inject({ url: '/r/sample' });
+    expect(sample.headers['x-robots-tag']).toBeUndefined();
+    expect(sample.body).toContain('<link rel="canonical" href="http://localhost:8080/r/sample">');
+  });
+
   it('shows the worst-case note only for ranges, worded for a lockfile that lacks the dependency', async () => {
     const exact = await doneReport([{ name: 'lodash', spec: '4.17.15', scope: 'prod', lockVersion: null }]);
     expect((await t.app.inject({ url: `/r/${exact}` })).body).not.toContain('may already be fixed');
