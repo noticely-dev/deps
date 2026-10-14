@@ -36,6 +36,16 @@ describe('contact', () => {
     expect(await t.db.collection('messages').countDocuments({ emailSent: true })).toBe(1);
   });
 
+  it('has a privacy-request variant with its own heading and email subject', async () => {
+    const page = (await t.app.inject({ url: '/contact?topic=privacy' })).body;
+    expect(page).toContain('<h1>Privacy request</h1>');
+    expect(page).toContain('name="topic" value="privacy"');
+    expect(page).not.toContain('name="company"');
+    expect((await t.app.inject({ url: '/contact?topic=<script>' })).body).toContain('<h1>Get a fixed-price quote</h1>');
+    await post({ ...valid(), company: '', topic: 'privacy' }, '203.0.113.44');
+    expect(t.mails.at(-1)?.subject).toBe('Privacy request: Ana');
+  });
+
   it('silently drops honeypot submissions', async () => {
     const before = t.mails.length;
     const res = await post({ ...valid(), website: 'http://spam.test' }, '203.0.113.41');

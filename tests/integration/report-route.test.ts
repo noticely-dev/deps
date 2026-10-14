@@ -64,6 +64,14 @@ describe('GET /r/:id', () => {
     expect(body).toContain('data-pager="rows" hidden');
     expect(body).toContain('data-pager="plan" hidden');
     expect(body).toContain('class="step" data-step');
+    for (const k of ['vulnerable', 'deprecated', 'maintenance', 'outdated']) {
+      expect(body).toContain(`data-kpi="${k}"`);
+      expect(body).toContain(`data-filter="${k}"`);
+    }
+    expect(body).toContain('Known vulnerabilities (1)');
+    expect(body).toContain('Fixed in <span class="mono">4.17.21</span>');
+    expect(body).toContain('aria-expanded="false"');
+    expect(body).toMatch(/href="https:\/\/osv\.dev\/vulnerability\/GHSA-35jh-r3h4-6jhm" target="_blank" rel="nofollow noopener noreferrer"/);
   });
 
   it('shows the worst-case note only for ranges, worded for a lockfile that lacks the dependency', async () => {
@@ -81,6 +89,7 @@ describe('GET /r/:id', () => {
     const res = await t.app.inject({ url: `/r/${id}` });
     expect(res.body).not.toContain('<script>alert(1)</script>');
     expect(res.body).not.toContain('<img src=x');
+    expect((await t.app.inject({ url: `/r/${id}.md` })).headers['content-disposition']).toBe('attachment; filename="img-src-x-onerror-alert-1-dependency-report.md"');
     expect(res.body).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
   });
 
@@ -98,7 +107,7 @@ describe('GET /r/:id', () => {
     expect(res.body).toContain('Vulnerability data was unavailable for this check.');
     expect(res.body).not.toContain('no known vulnerabilities');
     expect(res.body).toContain('The score excludes the missing data.');
-    expect(res.body).toMatch(/<div class="n crit">—<\/div><div class="l">Known vulnerabilities/);
+    expect(res.body).toMatch(/<span class="n crit">—<\/span><span class="l">Known vulnerabilities/);
     const md = (await t.app.inject({ url: `/r/${id}.md` })).body;
     expect(md).toContain('Partial data: OSV.dev vulnerabilities could not be reached.');
     expect(md).toContain('The score excludes the missing data.');
@@ -135,6 +144,7 @@ describe('GET /r/:id', () => {
     const id = await doneReport(deps);
     const md = await t.app.inject({ url: `/r/${id}.md` });
     expect(md.headers['content-type']).toContain('text/markdown');
+    expect(md.headers['content-disposition']).toBe('attachment; filename="acme-shop-api-dependency-report.md"');
     expect(md.body).toContain('| lodash | 4.17.15 | 4.17.21 | High |');
     const json = await t.app.inject({ url: `/r/${id}.json` });
     expect(json.json()).toMatchObject({ id, projectName: 'acme-shop-api', score: expect.any(Number) });

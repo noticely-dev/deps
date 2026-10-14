@@ -1,24 +1,56 @@
 <% layout('./layout') %>
-<article class="panel prose">
-<h1>Methodology</h1>
-<p>Every number on a report comes from the rules below. They are deliberately simple, so you can check them.</p>
-<h2>Versions</h2>
-<p>With a <code>package-lock.json</code>, the exact installed version is checked. Without one, the <b>lowest</b> published version your range allows is checked (worst case), and findings are marked “may already be fixed”.</p>
-<h2>Findings</h2>
-<table>
-<tr><th>Finding</th><th>Risk</th></tr>
-<tr><td>Known vulnerability (OSV.dev)</td><td>The advisory's own severity: Critical, High, Medium (moderate) or Low. Without one: Critical for a known malicious package, otherwise Medium</td></tr>
-<tr><td>Package deprecated by its authors</td><td>High</td></tr>
-<tr><td>Only the version you use is deprecated</td><td>Medium</td></tr>
-<tr><td>No release for more than 2 years</td><td>Medium</td></tr>
-<tr><td>Single npm maintainer</td><td>Low (Medium if also idle for 2 years)</td></tr>
-<tr><td>1–2 major versions behind / 3 or more</td><td>Low / Medium</td></tr>
-</table>
-<p>A package's risk is its worst finding. <code>@types/*</code> packages skip the single-maintainer and major-versions-behind findings: DefinitelyTyped publishes all of them under one account, and their major version follows the runtime or library they describe.</p>
-<h2>Health score</h2>
-<p>Start at 100 and subtract per package: Critical −25, High −12, Medium −5, Low −1. devDependencies count half. The score never goes below 0. <b>85–100</b> Healthy, <b>60–84</b> Needs attention, <b>below 60</b> At risk.</p>
-<h2>Upgrade plan and estimates</h2>
-<p>Steps are ordered by risk removed per hour of work. Estimates are rough ranges: patch or minor upgrade ~15 min, renamed package ~30 min, major upgrade 0.5–1 day plus 0.5 day per extra major, replacing a deprecated package 0.5–1 day. Low-risk maintenance findings are listed as “keep an eye on it”, with no estimate.</p>
-<h2>Data sources</h2>
-<p>npm registry (versions, deprecation, maintainers, release dates), npm download counts, OSV.dev (vulnerabilities), deps.dev (source repository and OpenSSF Scorecard). Data is cached for 24 hours.</p>
+<article class="panel prose legal">
+  <h1>Methodology</h1>
+  <p class="muted">Every number on a report comes from the rules below. They are deliberately simple, so you can check them yourself.</p>
+
+  <h2>Versions</h2>
+  <p>With a <code>package-lock.json</code>, the exact installed version is checked. Without one, the <b>lowest</b> published version your range allows is checked (worst case), and those findings are marked “may already be fixed”.</p>
+
+  <h2>Findings</h2>
+  <table class="rules">
+    <thead><tr><th>Finding</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td>Known vulnerability (OSV.dev)</td><td>The advisory's own severity: <span class="sev critical">Critical</span> <span class="sev high">High</span> <span class="sev medium">Medium</span> <span class="sev low">Low</span><div class="muted small">Without a severity: Critical for a known malicious package, otherwise Medium.</div></td></tr>
+      <tr><td>Package deprecated by its authors</td><td><span class="sev high">High</span></td></tr>
+      <tr><td>Only the version you use is deprecated</td><td><span class="sev medium">Medium</span></td></tr>
+      <tr><td>No release for more than 2 years</td><td><span class="sev medium">Medium</span></td></tr>
+      <tr><td>Single npm maintainer</td><td><span class="sev low">Low</span> <span class="muted small">Medium if also idle for 2 years</span></td></tr>
+      <tr><td>1–2 major versions behind</td><td><span class="sev low">Low</span></td></tr>
+      <tr><td>3 or more major versions behind</td><td><span class="sev medium">Medium</span></td></tr>
+    </tbody>
+  </table>
+  <p>A package's risk is its worst finding. <code>@types/*</code> packages skip the single-maintainer and major-versions-behind findings: DefinitelyTyped publishes all of them under one account, and their major version follows the runtime or library they describe.</p>
+
+  <h2>Health score</h2>
+  <p>Start at 100 and subtract per package. devDependencies count half, and the score never goes below 0.</p>
+  <div class="score-rules">
+    <div><span class="sev critical">Critical</span><b>−25</b></div>
+    <div><span class="sev high">High</span><b>−12</b></div>
+    <div><span class="sev medium">Medium</span><b>−5</b></div>
+    <div><span class="sev low">Low</span><b>−1</b></div>
+  </div>
+  <dl class="facts">
+    <dt>85–100</dt><dd>Healthy</dd>
+    <dt>60–84</dt><dd>Needs attention</dd>
+    <dt>Below 60</dt><dd>At risk</dd>
+  </dl>
+
+  <h2>Upgrade plan and estimates</h2>
+  <p>Steps are ordered by risk removed per hour of work. Estimates are rough ranges:</p>
+  <dl class="facts">
+    <dt>Patch or minor upgrade</dt><dd>~15 min</dd>
+    <dt>Renamed package</dt><dd>~30 min</dd>
+    <dt>Major upgrade</dt><dd>0.5–1 day, plus 0.5 day per extra major</dd>
+    <dt>Replace a deprecated package</dt><dd>0.5–1 day</dd>
+    <dt>Low-risk maintenance finding</dt><dd>Listed as “monitor”, with no estimate</dd>
+  </dl>
+
+  <h2>Data sources</h2>
+  <dl class="facts">
+    <dt>npm registry</dt><dd>Versions, deprecation notices, maintainers, release dates</dd>
+    <dt>npm downloads</dt><dd>Weekly download counts</dd>
+    <dt>OSV.dev</dt><dd>Known vulnerabilities</dd>
+    <dt>deps.dev</dt><dd>Source repository and OpenSSF Scorecard</dd>
+  </dl>
+  <p class="muted small">Data is cached for 24 hours.</p>
 </article>

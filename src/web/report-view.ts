@@ -23,6 +23,7 @@ function kinds(p: PackageResult): string {
     if (f.kind === 'vulnerability') k.add('vulnerable');
     if (f.kind === 'deprecated' || f.kind === 'version-deprecated') k.add('deprecated');
     if (f.kind === 'idle' || f.kind === 'single-maintainer') k.add('maintenance');
+    if (f.kind === 'majors-behind') k.add('outdated');
   }
   return [...k].join(' ');
 }

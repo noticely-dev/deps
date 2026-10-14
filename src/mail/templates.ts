@@ -69,12 +69,13 @@ export function confirmEmail(o: { base: string; token: string; listTitle: string
   };
 }
 
-/** Quote request from the contact form, sent to the owner; reply-to is the visitor. */
-export function quoteRequestEmail(o: { base: string; name: string; email: string; company: string; reportUrl: string | null; message: string }): EmailContent {
+/** Contact-form message (quote or privacy request), sent to the owner; reply-to is the visitor. */
+export function quoteRequestEmail(o: { base: string; name: string; email: string; company: string; reportUrl: string | null; message: string; topic?: 'quote' | 'privacy' }): EmailContent {
+  const privacy = o.topic === 'privacy';
   const row = (k: string, v: string) =>
     `<tr><td style="padding:6px 16px 6px 0;font:13px/1.5 ${FONT};color:${C.mut};white-space:nowrap;vertical-align:top;">${k}</td><td style="padding:6px 0;font:14px/1.5 ${FONT};color:${C.fg};">${v}</td></tr>`;
   return {
-    subject: `Quote request: ${o.name}${o.company ? ` (${o.company})` : ''}`,
+    subject: `${privacy ? 'Privacy request' : 'Quote request'}: ${o.name}${o.company ? ` (${o.company})` : ''}`,
     text: [
       `From: ${o.name} <${o.email}>${o.company ? `, ${o.company}` : ''}`,
       `Report: ${o.reportUrl ?? 'none'}`,
@@ -87,7 +88,7 @@ export function quoteRequestEmail(o: { base: string; name: string; email: string
     html: layout({
       base: o.base,
       preheader: o.message.slice(0, 120),
-      heading: 'New quote request',
+      heading: privacy ? 'New privacy request' : 'New quote request',
       body: [
         `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">`,
         row('Name', esc(o.name)),

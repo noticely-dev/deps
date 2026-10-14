@@ -16,6 +16,7 @@ const Body = z.strictObject({
   company: z.string().trim().max(100).optional().default(''),
   message: z.string().trim().min(10).max(4000),
   r: z.string().optional().default(''),
+  topic: z.enum(['quote', 'privacy']).optional().default('quote'),
   website: z.string().optional().default(''),
   t: z.string().optional(),
   'cf-turnstile-response': z.string().max(2048).optional(),
@@ -23,11 +24,13 @@ const Body = z.strictObject({
 
 export default async function contactRoutes(app: FastifyInstance, deps: AppDeps): Promise<void> {
   const now = () => (deps.clock ?? (() => new Date()))();
-  const formPage = (r: string, status = 200, error?: string, values: Record<string, string> = {}) =>
-    ({ template: './contact', data: { title: 'Get a quote', turnstile: true, r: REPORT_ID_RE.test(r) ? r : '', t: issueFormTime(deps.config.IP_HASH_SECRET, now()), error, values }, status });
+  const formPage = (r: string, topic: unknown, status = 200, error?: string, values: Record<string, string> = {}) => {
+    const privacy = topic === 'privacy';
+    return { template: './contact', data: { title: privacy ? 'Privacy request' : 'Get a quote', privacy, turnstile: true, r: REPORT_ID_RE.test(r) ? r : '', t: issueFormTime(deps.config.IP_HASH_SECRET, now()), error, values }, status };
+  };
 
-  app.get<{ Querystring: { r?: string } }>('/contact', (req, reply) => {
-    const p = formPage(String(req.query.r ?? ''));
+  app.get<{ Querystring: { r?: string; topic?: string } }>('/contact', (req, reply) => {
+    const p = formPage(String(req.query.r ?? ''), req.query.topic);
     return reply.page(p.template, p.data, p.status);
   });
 
@@ -35,7 +38,7 @@ export default async function contactRoutes(app: FastifyInstance, deps: AppDeps)
     const parsed = Body.safeParse(req.body ?? {});
     const raw = (req.body ?? {}) as Record<string, string>;
     const fail = (msg: string, status = 400) => {
-      const p = formPage(String(raw.r ?? ''), status, msg, { name: raw.name ?? '', email: raw.email ?? '', company: raw.company ?? '', message: raw.message ?? '' });
+      const p = formPage(String(raw.r ?? ''), raw.topic, status, msg, { name: raw.name ?? '', email: raw.email ?? '', company: raw.company ?? '', message: raw.message ?? '' });
       return reply.page(p.template, p.data, p.status);
     };
     if (!parsed.success) return fail('Please fill in your name, a valid email and a message of at least 10 characters.');
@@ -54,7 +57,7 @@ export default async function contactRoutes(app: FastifyInstance, deps: AppDeps)
       await deps.mailer.send({
         to: deps.config.CONTACT_TO,
         replyTo: b.email,
-        ...quoteRequestEmail({ base: deps.config.PUBLIC_URL, name, email: b.email, company, message: b.message,
+        ...quoteRequestEmail({ base: deps.config.PUBLIC_URL, name, email: b.email, company, message: b.message, topic: b.topic,
           reportUrl: reportId ? `${deps.config.PUBLIC_URL}/r/${reportId}` : null }),
       });
       await markMessageSent(deps.db, id);
