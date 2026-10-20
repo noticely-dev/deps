@@ -84,8 +84,30 @@ describe('parseInput', () => {
     ]);
   });
 
-  it('rejects lockfile v1 and invalid lockfiles', () => {
-    expect(() => parseInput('{}', pkg({ lockfileVersion: 1, dependencies: {} }))).toThrow(/lockfile v2 or v3/);
-    expect(() => parseInput('{}', 'nope')).toThrow(/lockfile is not valid JSON/);
+  it('takes exact versions from a v1 lockfile, top-level entries only', () => {
+    const lock = pkg({
+      lockfileVersion: 1,
+      dependencies: {
+        lodash: { version: '4.17.21' },
+        express: { version: '4.18.2', dependencies: { debug: { version: '2.6.9' } } },
+        mine: { version: 'github:me/mine#abc' },
+      },
+    });
+    const r = parseInput(pkg({ dependencies: { lodash: '^4.17.15', express: '^4.0.0', debug: '^4.0.0', mine: '^1.0.0' } }), lock);
+    expect(r.hasLockfile).toBe(true);
+    expect(r.lockfileIgnored).toBeUndefined();
+    expect(r.deps.map((d) => [d.name, d.lockVersion])).toEqual([
+      ['lodash', '4.17.21'], ['express', '4.18.2'], ['debug', null], ['mine', null],
+    ]);
+  });
+
+  it('ignores an unusable lockfile and says why, instead of rejecting the check', () => {
+    const notJson = parseInput(pkg({ dependencies: { lodash: '^4.17.15' } }), 'lodash@^4.17.15:\n  version "4.17.21"');
+    expect(notJson).toMatchObject({ hasLockfile: false, lockfileIgnored: 'not valid JSON' });
+    expect(notJson.deps[0]?.lockVersion).toBeNull();
+    for (const lock of [pkg({ lockfileVersion: 4, packages: {} }), pkg({ lockfileVersion: 1 }), pkg({ name: 'x' })]) {
+      expect(parseInput('{}', lock)).toMatchObject({ hasLockfile: false, lockfileIgnored: 'unsupported format' });
+    }
+    expect(() => parseInput('{}', ' '.repeat(LIMITS.lockfileBytes + 1))).toThrow(/lockfile is too large/);
   });
 });

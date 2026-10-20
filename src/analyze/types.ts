@@ -23,6 +23,8 @@ export interface SkippedDep {
 export interface ParsedInput {
   projectName: string;
   hasLockfile: boolean;
+  /** Why an uploaded lockfile was not used (the check falls back to worst-case versions). */
+  lockfileIgnored?: string;
   deps: StoredDep[];
   skipped: SkippedDep[];
 }

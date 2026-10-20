@@ -4,7 +4,7 @@
   <p class="muted">Every number on a report comes from the rules below. They are deliberately simple, so you can check them yourself.</p>
 
   <h2>Versions</h2>
-  <p>With a <code>package-lock.json</code>, the exact installed version is checked. Without one, the <b>lowest</b> published version your range allows is checked (worst case), and those findings are marked “may already be fixed”.</p>
+  <p>With a <code>package-lock.json</code> (npm 5 or newer), the exact installed version is checked. Without one, the <b>lowest</b> published version your range allows is checked (worst case), and those findings are marked “may already be fixed”.</p>
 
   <h2>Findings</h2>
   <table class="rules">
@@ -29,6 +29,7 @@
     <div><span class="sev medium">Medium</span><b>−5</b></div>
     <div><span class="sev low">Low</span><b>−1</b></div>
   </div>
+  <p>Maintenance findings (no recent release, a single maintainer, major versions behind) take off at most 30 points in total, so a project whose only issue is quiet dependencies never drops below 70. Vulnerabilities and deprecations always count in full.</p>
   <dl class="facts">
     <dt>85–100</dt><dd>Healthy</dd>
     <dt>60–84</dt><dd>Needs attention</dd>

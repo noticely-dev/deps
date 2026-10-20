@@ -1,8 +1,9 @@
 import { formatEffort } from '../analyze/plan.js';
-import { RISK_ORDER, type PackageResult, type Risk } from '../analyze/types.js';
+import { RISK_ORDER, type FindingKind, type PackageResult, type Risk } from '../analyze/types.js';
 import type { ReportDoc } from '../store/reports.js';
 import { formatDateTime, formatDownloads, formatMonth, ringDash, scorecardBar } from './format.js';
 
+const VERSION_KINDS: ReadonlySet<FindingKind> = new Set(['vulnerability', 'version-deprecated', 'majors-behind']);
 const RISK_LABEL: Record<Risk, string> = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', healthy: 'Healthy' };
 const SOURCE_LABEL: Record<string, string> = { npm: 'npm registry', downloads: 'npm download counts', osv: 'OSV.dev vulnerabilities', 'deps.dev': 'deps.dev scorecards' };
 
@@ -43,6 +44,7 @@ export function toReportView(doc: ReportDoc, publicUrl: string) {
     checkedAt: formatDateTime(doc.finishedAt ?? doc.createdAt),
     shareUrl: `${publicUrl}/r/${doc._id}`,
     hasLockfile: doc.hasLockfile,
+    lockfileIgnored: doc.lockfileIgnored ?? null,
     score: r.score,
     label: r.label,
     ringClass: r.label === 'Healthy' ? 'healthy' : r.label === 'Needs attention' ? 'attention' : 'risk',
@@ -59,7 +61,8 @@ export function toReportView(doc: ReportDoc, publicUrl: string) {
       maintainers: p.maintainers ?? '—', downloads: formatDownloads(p.downloads),
       scorecard: p.scorecard === null ? '—' : p.scorecard.toFixed(1), bar: scorecardBar(p.scorecard),
       reason: reason(p), kinds: kinds(p),
-      worstCase: p.worstCase && p.risk !== 'healthy'
+      // Only findings tied to the checked version can change with the real one; idle, single-maintainer and whole-package deprecation can't.
+      worstCase: p.worstCase && p.findings.some((f) => VERSION_KINDS.has(f.kind))
         ? (doc.hasLockfile ? 'not in your lockfile: lowest matching version checked' : 'may already be fixed, add your lockfile')
         : null,
       deprecated: p.deprecated,

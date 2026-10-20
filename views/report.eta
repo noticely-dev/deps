@@ -4,7 +4,7 @@
   <div class="report-head">
     <div>
       <h1><%= r.projectName %></h1>
-      <div class="muted small"><%= r.depCount %> direct dependencies · checked <%= r.checkedAt %> · <%= r.hasLockfile ? 'exact versions from lockfile' : 'no lockfile: lowest matching versions (worst case)' %></div>
+      <div class="muted small"><%= r.depCount %> direct dependencies · checked <%= r.checkedAt %> · <%= r.hasLockfile ? 'exact versions from lockfile' : r.lockfileIgnored ? `lockfile not used (${r.lockfileIgnored}): lowest matching versions (worst case)` : 'no lockfile: lowest matching versions (worst case)' %></div>
     </div>
     <div class="row-actions">
       <button type="button" class="b" data-copy="<%= r.shareUrl %>">Copy link</button>

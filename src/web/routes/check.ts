@@ -45,7 +45,8 @@ export default async function checkRoutes(app: FastifyInstance, deps: AppDeps): 
     }
 
     const id = newReportId();
-    await createReport(deps.db, { _id: id, projectName: parsed.projectName, hasLockfile: parsed.hasLockfile, deps: parsed.deps, skipped: parsed.skipped },
+    await createReport(deps.db, { _id: id, projectName: parsed.projectName, hasLockfile: parsed.hasLockfile,
+      ...(parsed.lockfileIgnored ? { lockfileIgnored: parsed.lockfileIgnored } : {}), deps: parsed.deps, skipped: parsed.skipped },
       (deps.clock ?? (() => new Date()))());
     if (!deps.runner.submit(id)) {
       await setReportFailed(deps.db, id, 'busy');
