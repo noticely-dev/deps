@@ -45,7 +45,7 @@ describe('GET /r/:id', () => {
     const res = await t.app.inject({ url: `/r/${id}` });
     expect(res.statusCode).toBe(200);
     for (const s of ['acme-shop-api', 'Needs attention', 'Recommended upgrade order', 'Upgrade to 4.17.21',
-      'GHSA-35jh-r3h4-6jhm', 'https://osv.dev/vulnerability/GHSA-35jh-r3h4-6jhm', 'may already be fixed',
+      'GHSA-35jh-r3h4-6jhm', 'https://osv.dev/vulnerability/GHSA-35jh-r3h4-6jhm',
       `/contact?r=${id}`, 'independent backend engineer', 'name="list" value="pdf"', 'Not from the npm registry']) {
       expect(res.body).toContain(s);
     }
@@ -96,7 +96,10 @@ describe('GET /r/:id', () => {
   it('shows the worst-case note only for ranges, worded for a lockfile that lacks the dependency', async () => {
     const exact = await doneReport([{ name: 'lodash', spec: '4.17.15', scope: 'prod', lockVersion: null }]);
     expect((await t.app.inject({ url: `/r/${exact}` })).body).not.toContain('may already be fixed');
-    const range: StoredDep[] = [{ name: 'request', spec: '^2.88.2', scope: 'prod', lockVersion: null }];
+    // Deprecated as a whole and idle: no other version would change that.
+    const versionless = await doneReport([{ name: 'request', spec: '^2.88.2', scope: 'prod', lockVersion: null }]);
+    expect((await t.app.inject({ url: `/r/${versionless}` })).body).not.toContain('may already be fixed');
+    const range: StoredDep[] = [{ name: 'lodash', spec: '^4.17.15', scope: 'prod', lockVersion: null }];
     expect((await t.app.inject({ url: `/r/${await doneReport(range)}` })).body).toContain('may already be fixed, add your lockfile');
     const notInLock = (await t.app.inject({ url: `/r/${await doneReport(range, 'p', [], true)}` })).body;
     expect(notInLock).toContain('not in your lockfile: lowest matching version checked');
@@ -130,6 +133,14 @@ describe('GET /r/:id', () => {
     const md = (await t.app.inject({ url: `/r/${id}.md` })).body;
     expect(md).toContain('Partial data: OSV.dev vulnerabilities could not be reached.');
     expect(md).toContain('The score excludes the missing data.');
+  });
+
+  it('says when an uploaded lockfile was not used', async () => {
+    const id = newReportId();
+    await createReport(t.db, { _id: id, projectName: 'p', hasLockfile: false, lockfileIgnored: 'unsupported format', deps: [], skipped: [] }, now);
+    await setReportResult(t.db, id, await analyzeDeps({ deps: [] }, fakeSources(sourceData), {}, now));
+    expect((await t.app.inject({ url: `/r/${id}` })).body)
+      .toContain('lockfile not used (unsupported format): lowest matching versions (worst case)');
   });
 
   it('renders an empty project', async () => {

@@ -52,18 +52,32 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+class LockfileUnusable extends Error {}
+
 function lockVersions(text: string): Map<string, string> {
   if (Buffer.byteLength(text, 'utf8') > LIMITS.lockfileBytes) throw new InputError('The lockfile is too large (max 10 MB)');
-  const lock = parseJson(text, 'lockfile');
-  if (!isRecord(lock) || (lock.lockfileVersion !== 2 && lock.lockfileVersion !== 3) || !isRecord(lock.packages)) {
-    throw new InputError('Only npm lockfile v2 or v3 (npm 7 or newer) is supported');
+  let lock: unknown;
+  try {
+    lock = parseJson(text, 'lockfile');
+  } catch {
+    throw new LockfileUnusable('not valid JSON');
   }
   const out = new Map<string, string>();
-  for (const [key, entry] of Object.entries(lock.packages)) {
-    if (!key.startsWith('node_modules/')) continue;
-    const name = key.slice('node_modules/'.length);
-    if (name.includes('node_modules/')) continue; // nested, not a direct install location
+  const add = (name: string, entry: unknown) => {
     if (isRecord(entry) && typeof entry.version === 'string' && semver.valid(entry.version)) out.set(name, entry.version);
+  };
+  if (isRecord(lock) && (lock.lockfileVersion === 2 || lock.lockfileVersion === 3) && isRecord(lock.packages)) {
+    for (const [key, entry] of Object.entries(lock.packages)) {
+      if (!key.startsWith('node_modules/')) continue;
+      const name = key.slice('node_modules/'.length);
+      if (name.includes('node_modules/')) continue; // nested, not a direct install location
+      add(name, entry);
+    }
+  } else if (isRecord(lock) && lock.lockfileVersion === 1 && isRecord(lock.dependencies)) {
+    // npm 5-6: top-level keys are the packages installed at node_modules/<name>; nested ones live under each entry.
+    for (const [name, entry] of Object.entries(lock.dependencies)) add(name, entry);
+  } else {
+    throw new LockfileUnusable('unsupported format');
   }
   return out;
 }
@@ -75,7 +89,16 @@ export function parseInput(packageJsonText: string, lockfileText: string | null)
   const pkg = parseJson(packageJsonText, 'package.json');
   if (!isRecord(pkg)) throw new InputError('package.json must be a JSON object');
 
-  const locks = lockfileText ? lockVersions(lockfileText) : null;
+  let locks: Map<string, string> | null = null;
+  let lockfileIgnored: string | undefined;
+  if (lockfileText) {
+    try {
+      locks = lockVersions(lockfileText);
+    } catch (err) {
+      if (!(err instanceof LockfileUnusable)) throw err;
+      lockfileIgnored = err.message;
+    }
+  }
   const projectName = typeof pkg.name === 'string' && pkg.name.trim() ? pkg.name.trim().slice(0, 100) : 'unnamed project';
 
   const deps: StoredDep[] = [];
@@ -106,5 +129,5 @@ export function parseInput(packageJsonText: string, lockfileText: string | null)
   if (deps.length + skipped.length > LIMITS.maxDeps) {
     throw new InputError(`This tool checks at most 300 direct dependencies (found ${deps.length + skipped.length})`);
   }
-  return { projectName, hasLockfile: locks !== null, deps, skipped };
+  return { projectName, hasLockfile: locks !== null, ...(lockfileIgnored ? { lockfileIgnored } : {}), deps, skipped };
 }

@@ -160,7 +160,7 @@ textarea.dragover { border-color: var(--acc); border-style: dashed; }
 .filters button { padding: 4px 11px; border-radius: 999px; font-size: 12px; }
 .filters button[aria-pressed="true"] { background: var(--acc-bg); color: var(--acc-fg); }
 .tabs button:hover, .filters button:hover { color: var(--fg); }
-.tbl.deps { table-layout: fixed; min-width: 860px; }
+.tbl.deps { table-layout: fixed; min-width: 780px; }
 .c-ver { width: 76px; } .c-date { width: 90px; } .c-maint { width: 56px; } .c-dl { width: 100px; } .c-score { width: 96px; } .c-risk { width: 104px; }
 .tbl td .pk { display: flex; align-items: center; gap: 6px; font-weight: 600; overflow-wrap: anywhere; }
 .chev { flex: none; color: var(--mut); transition: transform .15s; } tr.row[aria-expanded="true"] .chev { transform: rotate(90deg); }
@@ -217,8 +217,13 @@ input[aria-invalid][aria-invalid], textarea[aria-invalid][aria-invalid] { border
 @media (max-width: 640px) { .contact-form { padding: 20px; } }
 .hp { position: absolute; left: -10000px; }
 
+/* The dependency table needs 780px: below ~1180px (with a scrollbar) there is no room for it beside the 300px sidebar, so the sidebar moves under it. */
+@media (max-width: 1180px) {
+  .report { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 900px) {
-  .report, .summary, .files, .how { grid-template-columns: 1fr; }
+  .summary, .files, .how { grid-template-columns: 1fr; }
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .wrap { padding: 16px; }
   .nav-new { display: none; }
@@ -228,6 +233,9 @@ input[aria-invalid][aria-invalid], textarea[aria-invalid][aria-invalid] { border
 
 @media (max-width: 700px) {
   .nav { padding: 10px 16px; } .nav nav { gap: 14px; } .gh-t { display: none; }
+}
+
+@media (max-width: 840px) {
   /* Dependency table becomes one card per package: name and risk on top, the numbers in a 3-column grid below. */
   .tbl.deps { min-width: 0; }
   .tbl.deps colgroup, .tbl.deps thead { display: none; }

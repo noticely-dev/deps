@@ -10,6 +10,7 @@ export interface ReportDoc {
   status: 'running' | 'done' | 'failed';
   projectName: string;
   hasLockfile: boolean;
+  lockfileIgnored?: string;
   deps: StoredDep[];
   skipped: SkippedDep[];
   result?: ReportResult;
@@ -19,7 +20,7 @@ export interface ReportDoc {
   expiresAt?: Date;
 }
 
-export type NewReport = Pick<ReportDoc, '_id' | 'projectName' | 'hasLockfile' | 'deps' | 'skipped'>;
+export type NewReport = Pick<ReportDoc, '_id' | 'projectName' | 'hasLockfile' | 'lockfileIgnored' | 'deps' | 'skipped'>;
 
 const reports = (db: Db) => db.collection<ReportDoc>('reports');
 
