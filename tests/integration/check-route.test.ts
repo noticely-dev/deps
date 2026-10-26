@@ -42,6 +42,19 @@ describe('POST /check', () => {
     expect(res.body).toContain('verification');
   });
 
+  it('counts refused checks by reason, without the file contents', async () => {
+    const before = t.events.length;
+    t.setTurnstile(false);
+    const noToken = multipart({ packageJson: pkg });
+    await t.app.inject({ method: 'POST', url: '/check', payload: noToken.payload, headers: { ...noToken.headers, 'cf-connecting-ip': '203.0.113.5' } });
+    await post({ packageJson: pkg }, '203.0.113.5');
+    t.setTurnstile(true);
+    await post({ packageJson: '{nope' }, '203.0.113.5');
+    const big = await post({ packageJson: pkg, lockfile: { filename: 'package-lock.json', content: 'a'.repeat(10 * 1024 * 1024 + 1) } }, '203.0.113.5');
+    expect(big.statusCode).toBe(413);
+    expect(t.events.slice(before)).toEqual(['refused:turnstile-missing', 'refused:turnstile-failed', 'refused:input', 'refused:too-large']);
+  });
+
   it('explains missing or invalid input', async () => {
     expect((await post({}, '203.0.113.4')).body).toContain('Paste your package.json');
     const bad = await post({ packageJson: '{nope' }, '203.0.113.4');

@@ -189,6 +189,53 @@
     if ((el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) && el.hasAttribute('aria-invalid') && el.checkValidity()) showError(el, '');
   });
 
+  // Bot check: a form sent before Turnstile has its token is refused by the server, so wait for the token
+  // (it usually arrives within a second or two) and then submit. Without JS the form posts as before.
+  const TOKEN_WAIT_MS = 15_000;
+  document.querySelectorAll('form').forEach((form) => {
+    const widget = form.querySelector('.cf-turnstile');
+    if (!widget) return;
+    const token = () => form.querySelector('[name="cf-turnstile-response"]')?.value;
+    let note = null;
+    let waiting = false;
+    form.addEventListener('submit', (e) => {
+      if (token()) return;
+      e.preventDefault();
+      if (waiting) return;
+      waiting = true;
+      if (!note) {
+        note = document.createElement('p');
+        note.className = 'muted small bot-note';
+        note.setAttribute('role', 'status');
+        widget.insertAdjacentElement('afterend', note);
+      }
+      note.classList.remove('field-error');
+      note.textContent = 'Checking that you are not a bot…';
+      note.hidden = false;
+      const button = e.submitter;
+      if (button) button.disabled = true;
+      const started = Date.now();
+      const tick = () => {
+        if (token()) {
+          waiting = false;
+          note.hidden = true;
+          if (button) button.disabled = false;
+          form.requestSubmit(button ?? undefined);
+          return;
+        }
+        if (Date.now() - started > TOKEN_WAIT_MS) {
+          waiting = false;
+          if (button) button.disabled = false;
+          note.classList.add('field-error');
+          note.textContent = 'The bot check did not finish. If an ad or tracking blocker is on, allow challenges.cloudflare.com, reload the page and try again.';
+          return;
+        }
+        setTimeout(tick, 250);
+      };
+      tick();
+    });
+  });
+
   // package.json editor: line numbers, JSON colours and a size line, drawn behind the real textarea.
   const editor = document.querySelector('[data-editor]');
   const area = editor?.querySelector('textarea');

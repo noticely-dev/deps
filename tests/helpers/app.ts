@@ -16,6 +16,7 @@ export async function testApp(o: { sources?: Sources; config?: Partial<Config>; 
   const metrics: AppMetrics = {
     limited: (k) => events.push(`limited:${k}`),
     confirmed: (l) => events.push(`confirmed:${l}`),
+    refused: (r) => events.push(`refused:${r}`),
     render: async () => '# metrics\ndeps_checks_total 0\n',
   };
   let turnstileOk = o.turnstileOk ?? true;

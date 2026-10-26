@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import { InputError, parseInput } from '../../analyze/parse.js';
 import { newReportId, REPORT_ID_RE } from '../../store/ids.js';
 import { createReport, getReport, isStaleRunning, setReportFailed, type ReportDoc } from '../../store/reports.js';
-import type { AppDeps } from '../app.js';
+import { refuseCheck, type AppDeps } from '../app.js';
 import { clientIp } from '../client-ip.js';
 import { consume, consumeGlobal, refund, refundGlobal } from '../limits.js';
 
@@ -26,6 +26,7 @@ export default async function checkRoutes(app: FastifyInstance, deps: AppDeps): 
 
     const token = asText(body['cf-turnstile-response']) ?? undefined;
     if (!(await deps.turnstile.verify(token, ip))) {
+      refuseCheck(deps, req, token ? 'turnstile-failed' : 'turnstile-missing');
       return reply.page('./notice', { title: 'Verification failed', heading: 'Please complete the verification', message: 'The automatic bot check did not finish. Go back, wait a few seconds, and submit again.', back: true }, 400);
     }
 

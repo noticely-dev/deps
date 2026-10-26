@@ -2,7 +2,7 @@ import path from 'node:path';
 import formbody from '@fastify/formbody';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
-import Fastify, { type FastifyInstance, type FastifyReply } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import type { Db } from 'mongodb';
 import { InputError, LIMITS } from '../analyze/parse.js';
 import type { CheckRunner } from '../check/runner.js';
@@ -23,9 +23,13 @@ const INDEXABLE = new Set(['/', '/methodology', '/privacy', '/contact', '/r/samp
 const SITEMAP = ['/', '/methodology', '/r/sample', '/privacy', '/contact'];
 const isIndexable = (method: string, path: string, status: number) => (method === 'GET' || method === 'HEAD') && status === 200 && INDEXABLE.has(path);
 
+/** Why POST /check sent the visitor back without a report. */
+export type RefusedReason = 'turnstile-missing' | 'turnstile-failed' | 'input' | 'too-large';
+
 export interface AppMetrics {
   limited(kind: 'check' | 'global' | 'contact' | 'notify'): void;
   confirmed(list: 'pdf' | 'pack'): void;
+  refused(reason: RefusedReason): void;
   render(): Promise<string>;
 }
 
@@ -60,7 +64,13 @@ const CSP = [
   "frame-ancestors 'none'",
 ].join('; ');
 
-export const noopMetrics: AppMetrics = { limited() {}, confirmed() {}, render: async () => '' };
+export const noopMetrics: AppMetrics = { limited() {}, confirmed() {}, refused() {}, render: async () => '' };
+
+/** Counts and logs a refused check. `detail` must be our own fixed text, never anything from the visitor's file. */
+export function refuseCheck(deps: AppDeps, req: FastifyRequest, reason: RefusedReason, detail?: string): void {
+  deps.metrics?.refused(reason);
+  req.log.info({ refused: reason, ...(detail ? { detail } : {}) }, 'check refused');
+}
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
@@ -117,11 +127,14 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     reply.page('./notice', { title: 'Page not found', heading: 'Page not found', message: 'This page does not exist, or the report has expired (reports are kept for 30 days).' }, 404));
 
   app.setErrorHandler((err, req, reply) => {
+    const isCheck = req.method === 'POST' && req.url.split('?')[0] === '/check';
     if (err instanceof InputError) {
+      if (isCheck) refuseCheck(deps, req, 'input', err.userMessage);
       return reply.page('./notice', { title: 'Check failed', heading: "That file couldn't be checked", message: err.userMessage, back: true }, 400);
     }
     const status = (err as { statusCode?: number }).statusCode ?? 500;
     if (status === 413 || (err as { code?: string }).code === 'FST_REQ_FILE_TOO_LARGE') {
+      if (isCheck) refuseCheck(deps, req, 'too-large');
       return reply.page('./notice', { title: 'File too large', heading: 'File too large', message: 'package.json can be up to 256 KB and the lockfile up to 10 MB.', back: true }, 413);
     }
     if (status >= 400 && status < 500) {
