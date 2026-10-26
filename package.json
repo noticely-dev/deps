@@ -24,11 +24,11 @@
     "@fastify/static": "10.1.5",
     "@prometheus-io/client": "0.16.1",
     "eta": "4.6.0",
-    "fastify": "5.12.5",
+    "fastify": "5.12.7",
     "mongodb": "7.6.0",
     "secure-json-parse": "4.1.0",
     "semver": "7.8.5",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
